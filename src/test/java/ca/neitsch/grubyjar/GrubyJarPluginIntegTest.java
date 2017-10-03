@@ -10,6 +10,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -20,21 +21,26 @@ public class GrubyJarPluginIntegTest {
 
     @Test
     public void testHelloWorld()
-            throws Exception
+    throws Exception
     {
         File gradleBuildFile = folder.newFile("build.gradle");
         Util.writeTextToFile(gradleBuildFile,
-                "plugins { id 'ca.neitsch.grubyjar' }");
+                "plugins { id 'ca.neitsch.grubyjar' }\n"
+                        + "repositories { mavenCentral() }\n"
+                        + "dependencies { runtimeOnly \"org.jruby:jruby-complete:9.1.12.0\" }");
         Util.writeTextToFile(folder.newFile("foo.rb"),
-        "puts 'hello world'.upcase");
+                "puts 'hello world'.upcase");
 
         BuildResult result = GradleRunner.create()
                 .withProjectDir(folder.getRoot())
                 .withPluginClasspath()
-                .withArguments("--stacktrace", "grubyjar")
+                .withArguments("--stacktrace", "shadowJar")
+                .forwardOutput()
                 .build();
 
-        String jarRunOutput = new ProcessExecutor().command("java", "-jar", "foo.jar")
+        System.out.println(folder.getRoot());
+
+        String jarRunOutput = new ProcessExecutor().command("java", "-jar", "build/libs/foo.jar")
                 .directory(folder.getRoot())
                 .readOutput(true).execute()
                 .outputUTF8();
