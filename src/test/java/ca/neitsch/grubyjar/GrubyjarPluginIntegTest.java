@@ -2,20 +2,17 @@ package ca.neitsch.grubyjar;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
-import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.zeroturnaround.exec.ProcessExecutor;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
-public class GrubyJarPluginIntegTest {
+public class GrubyjarPluginIntegTest {
     @Rule
     public TemporaryFolder folder= new TemporaryFolder();
 
@@ -34,11 +31,9 @@ public class GrubyJarPluginIntegTest {
         BuildResult result = GradleRunner.create()
                 .withProjectDir(folder.getRoot())
                 .withPluginClasspath()
-                .withArguments("--stacktrace", "shadowJar")
+                .withArguments("shadowJar")
                 .forwardOutput()
                 .build();
-
-        System.out.println(folder.getRoot());
 
         String jarRunOutput = new ProcessExecutor().command("java", "-jar", "build/libs/foo.jar")
                 .directory(folder.getRoot())

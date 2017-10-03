@@ -1,25 +1,24 @@
 package ca.neitsch.grubyjar;
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.plugins.ApplicationPluginConvention;
-import org.gradle.api.specs.Spec;
 
 import java.io.File;
 import java.io.InputStream;
-import java.nio.file.CopyOption;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
-public class GrubyJarPlugin
+public class GrubyjarPlugin
         implements Plugin<Project> {
+
+    @VisibleForTesting
+    public static final String GRUBYJAR_MAIN_RB = "grubyjar_main.rb";
+    private static final String GRUBYJAR_MAIN = "GrubyjarMain";
 
     @Override
     public void apply(Project project) {
@@ -30,7 +29,7 @@ public class GrubyJarPlugin
                 "type", ShadowJar.class);
 
         ApplicationPluginConvention pluginConvention = (ApplicationPluginConvention)project.getConvention().getPlugins().get("application");
-        pluginConvention.setMainClassName("GrubyJarMain");
+        pluginConvention.setMainClassName(GRUBYJAR_MAIN);
 
         Task grubyJarTask = project.task("grubyjar");
         ShadowJar shadowJarTask = (ShadowJar)project.getTasks().getByName("shadowJar");
@@ -40,7 +39,7 @@ public class GrubyJarPlugin
         // https://stackoverflow.com/a/2193298
         Class<?> grubyJarMainClass = null;
         try {
-            grubyJarMainClass = Class.forName("GrubyJarMain");
+            grubyJarMainClass = Class.forName(GRUBYJAR_MAIN);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,14 +51,14 @@ public class GrubyJarPlugin
             FileUtils.deleteDirectory(grubyjarDir);
         });
         grubyjarDir.mkdirs();
-        File mainClassTarget = new File(grubyjarDir, "GrubyJarMain.class");
+        File mainClassTarget = new File(grubyjarDir, GRUBYJAR_MAIN + ".class");
         rethrowing(() -> {
             FileUtils.copyInputStreamToFile(mainClass, mainClassTarget);
         });
 
         rethrowing(() -> {
             FileUtils.copyFile(project.file("foo.rb"),
-                    new File(grubyjarDir, "grubyjar_main.rb"));
+                    new File(grubyjarDir, GRUBYJAR_MAIN_RB));
         });
 
         shadowJarTask.from(grubyjarDir);
