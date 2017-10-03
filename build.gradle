@@ -4,11 +4,18 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
 }
 
 dependencies {
+    compile("com.github.jengelman.gradle.plugins:shadow:2.0.1")
+    compile("com.google.guava:guava:23.0")
+
     testCompile("junit:junit:4.12")
     testCompile("org.hamcrest:hamcrest-library:1.3")
+    testCompile("org.zeroturnaround:zt-exec:1.10")
 }
 
 gradlePlugin {

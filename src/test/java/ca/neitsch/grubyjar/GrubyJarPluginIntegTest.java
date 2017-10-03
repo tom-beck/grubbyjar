@@ -2,9 +2,11 @@ package ca.neitsch.grubyjar;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
+import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.zeroturnaround.exec.ProcessExecutor;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,17 +20,25 @@ public class GrubyJarPluginIntegTest {
 
     @Test
     public void testHelloWorld()
-            throws IOException
+            throws Exception
     {
         File gradleBuildFile = folder.newFile("build.gradle");
         Util.writeTextToFile(gradleBuildFile,
                 "plugins { id 'ca.neitsch.grubyjar' }");
+        Util.writeTextToFile(folder.newFile("foo.rb"),
+        "puts 'hello world'.upcase");
 
         BuildResult result = GradleRunner.create()
                 .withProjectDir(folder.getRoot())
                 .withPluginClasspath()
+                .withArguments("--stacktrace", "grubyjar")
                 .build();
 
-        assertThat(result.getOutput(), containsString("Hello, world"));
+        String jarRunOutput = new ProcessExecutor().command("java", "-jar", "foo.jar")
+                .directory(folder.getRoot())
+                .readOutput(true).execute()
+                .outputUTF8();
+
+        assertThat(jarRunOutput, containsString("HELLO WORLD"));
     }
 }
