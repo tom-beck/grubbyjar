@@ -23,3 +23,19 @@ gradlePlugin {
 tasks.withType(AbstractCompile) {
     options.compilerArgs << "-Werror" << "-Xlint" << "-Xlint:-serial"
 }
+
+task unitTest(type: Test) {
+    exclude '**/*IntegTest.class'
+}
+
+task integTest(type: Test) {
+    include '**/*IntegTest.class'
+    shouldRunAfter unitTest
+}
+
+// Declared as type Test with no tests, because that makes IntelliJ listen for
+// test results.
+task unitThenIntegrationTests(type: Test) {
+    exclude '*'
+    dependsOn unitTest, integTest
+}

@@ -12,7 +12,7 @@ import java.io.IOException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
-public class GrubyJarPluginTest {
+public class GrubyJarPluginIntegTest {
     @Rule
     public TemporaryFolder folder= new TemporaryFolder();
 
