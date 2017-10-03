@@ -1,4 +1,4 @@
-import ca.neitsch.grubyjar.GrubyjarPlugin;
+import ca.neitsch.grubyjar.GrubyjarProject;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -11,6 +11,6 @@ public class GrubyjarMainTest {
         // have access to the launcher because the launcher is in the default
         // package.
         assertEquals(GrubyjarMain.GRUBYJAR_MAIN_RB,
-                GrubyjarPlugin.GRUBYJAR_MAIN_RB);
+                GrubyjarProject.GRUBYJAR_MAIN_RB);
     }
 }
