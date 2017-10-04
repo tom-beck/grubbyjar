@@ -2,27 +2,38 @@ package ca.neitsch.grubyjar;
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.FileUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.ApplicationPluginConvention;
+import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Set;
+
+import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
 
 /**
  * A gradle project to which Grubyjar has been applied
  */
 public class GrubyjarProject {
+    @VisibleForTesting
+    public static final String GRUBYJAR_MAIN_RB = "grubyjar_main.rb";
+    private static final String GRUBYJAR_MAIN = "GrubyjarMain";
+
     private Project _project;
     private File _workDir;
     private ShadowJar _shadowJar;
 
-    @VisibleForTesting
-    public static final String GRUBYJAR_MAIN_RB = "grubyjar_main.rb";
-    private static final String GRUBYJAR_MAIN = "GrubyjarMain";
 
     public GrubyjarProject(Project project) {
         _project = project;
@@ -39,11 +50,43 @@ public class GrubyjarProject {
             _shadowJar = applyShadowPlugin();
             _shadowJar.setArchiveName(getArchiveName());
 
+            _shadowJar.doFirst(this::verifyJrubyInClasspath);
+
             // Include the work directory contents in the jar
             _shadowJar.from(_workDir);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void verifyJrubyInClasspath(Task task) {
+        Configuration runtime = task.getProject().getConfigurations().getByName(RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+
+        Set<File> files = runtime.getResolvedConfiguration().getFiles();
+        try {
+            URL classpath[] = files.stream().map(f -> {
+                try {
+                    return f.toURI().toURL();
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
+            }).toArray(URL[]::new);
+
+            URLClassLoader cl = new URLClassLoader(classpath, null);
+            Class<?> scriptingContainer = cl.loadClass(ScriptingContainer.class.getName());
+            if (scriptingContainer != null)
+                return;
+        } catch(ClassNotFoundException e) {
+            raiseJrubyNotFound(files);
+        }
+        raiseJrubyNotFound(files);
+    }
+
+    private void raiseJrubyNotFound(Set<File> files) {
+        throw new GradleException("JRuby not found in "
+                + RUNTIME_CLASSPATH_CONFIGURATION_NAME
+                + " configuration:\n  "
+                + Joiner.on("\n  ").join(files));
     }
 
     private ShadowJar applyShadowPlugin() {

@@ -12,3 +12,11 @@ buildscript {
 }
 
 apply plugin: 'ca.neitsch.grubyjar'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    runtimeOnly "org.jruby:jruby-complete:9.1.12.0"
+}
