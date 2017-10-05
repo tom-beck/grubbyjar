@@ -1,6 +1,5 @@
 package ca.neitsch.grubyjar;
 
-import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,10 +20,10 @@ public class GrubyjarPluginIntegTest {
     throws Exception
     {
         File gradleBuildFile = folder.newFile("build.gradle");
+
+        TestUtil.class.getResource("GrubyjarMainTest.class");
         TestUtil.writeTextToFile(gradleBuildFile,
-                "plugins { id 'ca.neitsch.grubyjar' }\n"
-                        + "repositories { mavenCentral() }\n"
-                        + "dependencies { runtimeOnly \"org.jruby:jruby-complete:9.1.12.0\" }");
+                TestUtil.readResource("hello-world-script.gradle"));
         TestUtil.writeTextToFile(folder.newFile("foo.rb"),
                 "puts 'hello world'.upcase");
 
