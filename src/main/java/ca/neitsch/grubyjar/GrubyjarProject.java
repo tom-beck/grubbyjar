@@ -62,6 +62,6 @@ public class GrubyjarProject {
     }
 
     private String getArchiveName() {
-        return "foo.jar";
+        return _project.getName() + ".jar";
     }
 }

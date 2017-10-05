@@ -61,10 +61,14 @@ task standaloneTestPrep(type: Exec) {
     shouldRunAfter integTest, test
 }
 task standaloneTest(type: Exec) {
-    commandLine 'java', '-jar', 'build/libs/foo.jar'
+    commandLine 'java', '-jar', 'build/libs/standaloneTest.jar'
     workingDir 'standaloneTest'
 
     dependsOn standaloneTestPrep
 }
 
-tasks.check.dependsOn(standaloneTest)
+task testall(type: Test) {
+    exclude '*'
+    dependsOn unitThenIntegrationTests
+    dependsOn standaloneTest
+}

@@ -21,7 +21,6 @@ public class GrubyjarPluginIntegTest {
     {
         File gradleBuildFile = folder.newFile("build.gradle");
 
-        TestUtil.class.getResource("GrubyjarMainTest.class");
         TestUtil.writeTextToFile(gradleBuildFile,
                 TestUtil.readResource("hello-world-script.gradle"));
         TestUtil.writeTextToFile(folder.newFile("foo.rb"),
@@ -34,7 +33,9 @@ public class GrubyjarPluginIntegTest {
                 .forwardOutput()
                 .build();
 
-        String jarRunOutput = new ProcessExecutor().command("java", "-jar", "build/libs/foo.jar")
+        String jarRunOutput = new ProcessExecutor()
+                .command("java", "-jar",
+                        "build/libs/" + folder.getRoot().getName() + ".jar")
                 .directory(folder.getRoot())
                 .readOutput(true).execute()
                 .outputUTF8();

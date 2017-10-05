@@ -4,7 +4,6 @@ import com.google.common.base.Joiner;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.jruby.embed.ScriptingContainer;
 
