@@ -13,12 +13,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.Set;
 
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
 
 public class GrubyjarPrepTask
-    extends DefaultTask
+        extends DefaultTask
 {
     private File _workDir;
 
@@ -30,16 +31,52 @@ public class GrubyjarPrepTask
     }
 
     void setWorkDir(File workDir) {
-      _workDir = workDir;
+        _workDir = workDir;
     }
 
     private void copyRubyMain()
-            throws IOException
+    throws IOException
     {
-        FileUtils.copyFile(getProject().file("foo.rb"),
+        String scriptFile = determineScriptFile(getExtension(),
+                getProject().getRootDir());
+
+        FileUtils.copyFile(getProject().file(scriptFile),
                 new File(_workDir, GrubyjarProject.GRUBYJAR_MAIN_RB));
     }
 
+    String determineScriptFile(GrubyjarExtension extension, File rootDir) {
+        String script = extension.getScript();
+        if (script == null) {
+            String[] rbFiles = rootDir.list(
+                    (dir, name) -> name.endsWith(".rb"));
+            if (rbFiles.length == 1) {
+                script = rbFiles[0];
+            } else {
+                String errorPrefix = "No grubyjar script specified and";
+
+                if (rbFiles.length == 0) {
+                    throw new GradleException(errorPrefix
+                            + " no .rb files found in "
+                            + rootDir);
+                } else {
+                    throw new GradleException(errorPrefix
+                            + " multiple .rb files "
+                            + Arrays.toString(rbFiles)
+                            + " found in"
+                            + rootDir);
+                }
+            }
+        }
+        return script;
+    }
+
+    private GrubyjarExtension getExtension() {
+        return (GrubyjarExtension)getProject().getExtensions()
+                .getByName(GrubyjarPlugin.GRUBYJAR_EXTENSION_NAME);
+    }
+
+    /** Like {@code doLast}, but allows for cleaner instance methods that access
+     * the task through {@code self} instead of a parameter. */
     void doLast2(Runnable r) {
         doLast((t) -> r.run());
     }

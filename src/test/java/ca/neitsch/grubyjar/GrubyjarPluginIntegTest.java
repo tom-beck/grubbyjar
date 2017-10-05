@@ -23,7 +23,7 @@ public class GrubyjarPluginIntegTest {
 
         TestUtil.writeTextToFile(gradleBuildFile,
                 TestUtil.readResource("hello-world-script.gradle"));
-        TestUtil.writeTextToFile(folder.newFile("foo.rb"),
+        TestUtil.writeTextToFile(folder.newFile("hello.rb"),
                 "puts 'hello world'.upcase");
 
         GradleRunner.create()
