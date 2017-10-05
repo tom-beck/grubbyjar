@@ -10,6 +10,8 @@ public class GrubyjarMain {
     {
         ScriptingContainer s = new ScriptingContainer();
 
+        disabledSharedGems(s);
+
         s.setArgv(args);
         InputStream main = GrubyjarMain.class.getResourceAsStream(
                 GRUBYJAR_MAIN_RB);
@@ -18,5 +20,10 @@ public class GrubyjarMain {
             throw new RuntimeException(GRUBYJAR_MAIN_RB + " not found in jar");
         }
         s.runScriptlet(main, GRUBYJAR_MAIN_RB);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void disabledSharedGems(ScriptingContainer s) {
+        s.getEnvironment().put("GEM_PATH", "");
     }
 }
