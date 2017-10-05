@@ -21,14 +21,14 @@ public class GrubyjarPluginIntegTest {
     throws Exception
     {
         File gradleBuildFile = folder.newFile("build.gradle");
-        Util.writeTextToFile(gradleBuildFile,
+        TestUtil.writeTextToFile(gradleBuildFile,
                 "plugins { id 'ca.neitsch.grubyjar' }\n"
                         + "repositories { mavenCentral() }\n"
                         + "dependencies { runtimeOnly \"org.jruby:jruby-complete:9.1.12.0\" }");
-        Util.writeTextToFile(folder.newFile("foo.rb"),
+        TestUtil.writeTextToFile(folder.newFile("foo.rb"),
                 "puts 'hello world'.upcase");
 
-        BuildResult result = GradleRunner.create()
+        GradleRunner.create()
                 .withProjectDir(folder.getRoot())
                 .withPluginClasspath()
                 .withArguments("shadowJar")

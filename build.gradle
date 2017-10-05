@@ -58,7 +58,7 @@ task standaloneTestPrep(type: Exec) {
     workingDir 'standaloneTest'
 
     dependsOn publishToMavenLocal
-    shouldRunAfter integTest
+    shouldRunAfter integTest, test
 }
 task standaloneTest(type: Exec) {
     commandLine 'java', '-jar', 'build/libs/foo.jar'
