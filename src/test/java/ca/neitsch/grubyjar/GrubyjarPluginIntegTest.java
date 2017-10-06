@@ -35,7 +35,8 @@ public class GrubyjarPluginIntegTest {
             "x = Concurrent::Event.new",
             "x.set",
             "puts x",
-            "puts x.set");
+            "puts x.set",
+            "raise 'Version Mismatch' unless Concurrent::VERSION == '1.0.5'");
 
     @Before
     public void createBuildFileObject()
@@ -94,6 +95,29 @@ public class GrubyjarPluginIntegTest {
         String output = runJar();
         assertThat(output, containsString("#<Concurrent::Event"));
         assertThat(output, endsWith("\ntrue\n"));
+    }
+
+    @Test
+    public void testGemspecHelloWorld() throws Exception {
+        for (String fileName: new String[] {
+                "Gemfile",
+                "Gemfile.lock",
+                "bin/gemspec1",
+                "build.gradle",
+                "gemspec1.gemspec",
+                "lib/gemspec1.rb",
+        }) {
+            File outputFile = new File(_folder.getRoot(), fileName);
+            if (!outputFile.getParentFile().exists())
+                outputFile.getParentFile().mkdir();
+            TestUtil.writeTextToFile(outputFile,
+                    TestUtil.readResource("gemspec1/" + fileName));
+        }
+
+        runGradle();
+
+        String output = runJar();
+        assertThat(output, containsString("#<Concurrent::Event"));
     }
 
     BuildResult runGradle() {

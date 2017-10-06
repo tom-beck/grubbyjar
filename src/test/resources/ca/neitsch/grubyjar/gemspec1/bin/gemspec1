@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'gemspec1'
+
+Gemspec1::Main.new.run
