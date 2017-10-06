@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
 
 public class TestUtil {
     private TestUtil() {
@@ -16,7 +15,7 @@ public class TestUtil {
 
     static void writeTextToFile(File f, String t) {
         try {
-            Files.write(f.toPath(), t.getBytes());
+            Files.write(f.toPath(), t.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

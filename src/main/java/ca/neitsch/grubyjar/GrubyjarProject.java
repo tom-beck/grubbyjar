@@ -37,6 +37,7 @@ public class GrubyjarProject {
 
         _grubyjarPrep = addTask(_project, GrubyjarPrepTask.class);
         _grubyjarPrep.setWorkDir(workDir);
+        _grubyjarPrep.setShadowJar(_shadowJar);
 
         _shadowJar.dependsOn(_grubyjarPrep);
 

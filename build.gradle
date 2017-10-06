@@ -1,6 +1,7 @@
 plugins {
     id 'java-gradle-plugin'
     id 'maven-publish'
+    id "net.ltgt.errorprone" version "0.0.12"
 }
 
 repositories {
@@ -68,8 +69,13 @@ task standaloneTest(type: Exec) {
     dependsOn standaloneTestPrep
 }
 
+task rspec(type: Exec) {
+    commandLine 'bin/rspec'
+}
+
 task testall(type: Test) {
     exclude '*'
     dependsOn unitThenIntegrationTests
+    dependsOn rspec
     dependsOn standaloneTest
 }

@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 
 public class GrubyjarPluginIntegTest {
     @Rule
@@ -29,9 +30,16 @@ public class GrubyjarPluginIntegTest {
 
     private File _gradleBuildFile;
 
+    private static final String HELLO_CONCURRENT_RB = textFromLines(
+            "require 'concurrent'",
+            "x = Concurrent::Event.new",
+            "x.set",
+            "puts x",
+            "puts x.set");
+
     @Before
     public void createBuildFileObject()
-            throws IOException
+    throws IOException
     {
         _gradleBuildFile = _folder.newFile("build.gradle");
     }
@@ -51,9 +59,7 @@ public class GrubyjarPluginIntegTest {
     }
 
     @Test
-    // If a script references a gem that exists in the system but is not bundled
-    // into the jar, that should fail.
-    public void testHelloWorldWithMissingGem()
+    public void testAccessingUnbundledSystemGemShouldFail()
     throws Exception
     {
         new Gem("concurrent-ruby", "concurrent").ensureInstalled();
@@ -61,17 +67,33 @@ public class GrubyjarPluginIntegTest {
         TestUtil.writeTextToFile(_gradleBuildFile,
                 TestUtil.readResource("hello-world-script.gradle"));
 
-        textFile("hello.rb",
-                "require 'concurrent'",
-                "x = Concurrent::Event.new",
-                "x.set",
-                "puts x.set");
+        textFile("hello.rb", HELLO_CONCURRENT_RB);
 
         runGradle();
 
         _thrown.expect(InvalidExitValueException.class);
 
         runJar();
+    }
+
+    @Test
+    public void testAccessBundledGemShouldSucceed() throws Exception {
+        TestUtil.writeTextToFile(_gradleBuildFile,
+                TestUtil.readResource("hello-world-script.gradle"));
+
+        TestUtil.writeTextToFile(_folder.newFile("Gemfile"),
+                TestUtil.readResource("concurrent-ruby.Gemfile"));
+
+        TestUtil.writeTextToFile(_folder.newFile("Gemfile.lock"),
+                TestUtil.readResource("concurrent-ruby.Gemfile.lock"));
+
+        textFile("hello.rb", HELLO_CONCURRENT_RB);
+
+        runGradle();
+
+        String output = runJar();
+        assertThat(output, containsString("#<Concurrent::Event"));
+        assertThat(output, endsWith("\ntrue\n"));
     }
 
     BuildResult runGradle() {
@@ -87,7 +109,11 @@ public class GrubyjarPluginIntegTest {
     throws IOException
     {
         TestUtil.writeTextToFile(_folder.newFile(name),
-                Joiner.on("\n").join(lines) + "\n");
+                textFromLines(lines));
+    }
+
+    private static String textFromLines(String... lines) {
+        return Joiner.on("\n").join(lines) + "\n";
     }
 
     String runJar()
@@ -98,8 +124,6 @@ public class GrubyjarPluginIntegTest {
                         "build/libs/" + _folder.getRoot().getName() + ".jar")
                 .directory(_folder.getRoot())
                 .readOutput(true)
-                .redirectErrorStream(true)
-//                .redirectOutputAlsoTo(System.out)
                 .exitValueNormal()
                 .execute()
                 .outputUTF8();

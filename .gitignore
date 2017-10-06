@@ -1,2 +1,4 @@
 *.iml
 /build/
+/bin/
+Gemfile.lock

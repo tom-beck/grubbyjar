@@ -1,10 +1,18 @@
 package ca.neitsch.grubyjar;
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 import com.google.common.base.Joiner;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Script;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileTreeElement;
+import org.gradle.api.specs.Spec;
+import org.jruby.RubyArray;
+import org.jruby.RubyHash;
+import org.jruby.RubySymbol;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
@@ -13,6 +21,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -21,13 +30,57 @@ import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_
 public class GrubyjarPrepTask
         extends DefaultTask
 {
+    private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
+
     private File _workDir;
+    private ShadowJar _shadowJar;
 
     public GrubyjarPrepTask() {
         doLast2(this::verifyJrubyInClasspath);
         doLastRethrowing(this::createCleanWorkDir);
         doLastRethrowing(this::copyGrubyjarMainClassIntoWorkDir);
         doLastRethrowing(this::copyRubyMain);
+
+        doLastRethrowing(this::configureGemDeps);
+    }
+
+    private void configureGemDeps()
+    throws IOException
+    {
+        File gemfile = getProject().file("Gemfile");
+        if (!gemfile.exists())
+            return;
+
+        File gemfileLock = getProject().file("Gemfile.lock");
+        if (!gemfileLock.exists()) {
+            throw new GradleException("Gemfile exists but Gemfile.lock does not; please run `bundle install`.");
+        }
+
+        ScriptingContainer s = new ScriptingContainer();
+
+        s.runScriptlet(
+                getClass().getResourceAsStream(DETERMINE_GEM_FILES_RB),
+                DETERMINE_GEM_FILES_RB);
+
+        RubyArray gems = (RubyArray)s.callMethod(null, "determine_gem_files",
+                gemfile.toString(), gemfileLock.toString());
+
+        for (Object o: gems) {
+            RubyHash gemInfo = (RubyHash)o;
+            _shadowJar.from(gemInfo.get("gemspec"),
+                    copyspec -> copyspec.into("specifications"));
+            _shadowJar.from(gemInfo.get("install_path"),
+                    (copyspec) -> {
+                        copyspec.into("gems/" + gemInfo.get("full_name"));
+                        // Shadow’s getPath() and getName() are switched here,
+                        // so we can’t rely on either in case it gets fixed.
+                        copyspec.include((e) -> !e.getRelativePath().getLastName().equals("MANIFEST.MF"));
+                    });
+        }
+    }
+
+    public void setShadowJar(ShadowJar shadowJar) {
+        _shadowJar = shadowJar;
     }
 
     void setWorkDir(File workDir) {
