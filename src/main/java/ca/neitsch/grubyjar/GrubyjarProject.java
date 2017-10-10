@@ -21,28 +21,35 @@ public class GrubyjarProject {
 
     private Project _project;
     private ShadowJar _shadowJar;
+    private File _workDir;
     private GrubyjarPrepTask _grubyjarPrep;
 
     public GrubyjarProject(Project project) {
         _project = project;
+        _workDir = new File(_project.getBuildDir(),"grubyjar");
     }
 
     public void configure() {
-        File workDir = new File(_project.getBuildDir(),"grubyjar");
-
         setGrubyjarMainAsApplicationMain();
 
         _shadowJar = applyShadowPlugin();
         _shadowJar.setArchiveName(getArchiveName());
 
         _grubyjarPrep = addTask(_project, GrubyjarPrepTask.class);
-        _grubyjarPrep.setWorkDir(workDir);
-        _grubyjarPrep.setShadowJar(_shadowJar);
+        _grubyjarPrep.setGrubyjarProject(this);
 
         _shadowJar.dependsOn(_grubyjarPrep);
 
         // Include the work directory contents in the jar
-        _shadowJar.from(workDir);
+        _shadowJar.from(_workDir);
+    }
+
+    ShadowJar getShadowJar() {
+        return _shadowJar;
+    }
+
+    File getWorkDir() {
+        return _workDir;
     }
 
     private ShadowJar applyShadowPlugin() {

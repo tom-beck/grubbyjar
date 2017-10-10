@@ -3,16 +3,11 @@ package ca.neitsch.grubyjar;
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 import com.google.common.base.Joiner;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
-import org.gradle.api.Script;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.FileTreeElement;
-import org.gradle.api.specs.Spec;
 import org.jruby.RubyArray;
 import org.jruby.RubyHash;
-import org.jruby.RubySymbol;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
@@ -21,7 +16,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -32,8 +26,7 @@ public class GrubyjarPrepTask
 {
     private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
 
-    private File _workDir;
-    private ShadowJar _shadowJar;
+    private GrubyjarProject _grubyjarProject;
 
     public GrubyjarPrepTask() {
         doLast2(this::verifyJrubyInClasspath);
@@ -42,6 +35,10 @@ public class GrubyjarPrepTask
         doLastRethrowing(this::copyRubyMain);
 
         doLastRethrowing(this::configureGemDeps);
+    }
+
+    void setGrubyjarProject(GrubyjarProject grubyjarProject) {
+        _grubyjarProject = grubyjarProject;
     }
 
     private void configureGemDeps()
@@ -67,9 +64,9 @@ public class GrubyjarPrepTask
 
         for (Object o: gems) {
             RubyHash gemInfo = (RubyHash)o;
-            _shadowJar.from(gemInfo.get("gemspec"),
+            getShadowJar().from(gemInfo.get("gemspec"),
                     copyspec -> copyspec.into("specifications"));
-            _shadowJar.from(gemInfo.get("install_path"),
+            getShadowJar().from(gemInfo.get("install_path"),
                     (copyspec) -> {
                         copyspec.into("gems/" + gemInfo.get("full_name"));
                         // Shadow’s getPath() and getName() are switched here,
@@ -79,14 +76,6 @@ public class GrubyjarPrepTask
         }
     }
 
-    public void setShadowJar(ShadowJar shadowJar) {
-        _shadowJar = shadowJar;
-    }
-
-    void setWorkDir(File workDir) {
-        _workDir = workDir;
-    }
-
     private void copyRubyMain()
     throws IOException
     {
@@ -94,7 +83,7 @@ public class GrubyjarPrepTask
                 getProject().getRootDir());
 
         FileUtils.copyFile(getProject().file(scriptFile),
-                new File(_workDir, GrubyjarProject.GRUBYJAR_MAIN_RB));
+                new File(getWorkDir(), GrubyjarProject.GRUBYJAR_MAIN_RB));
     }
 
     String determineScriptFile(GrubyjarExtension extension, File rootDir) {
@@ -176,8 +165,8 @@ public class GrubyjarPrepTask
      * Create an empty ‘grubyjar’ directory in gradle’s build output directory.
      */
     void createCleanWorkDir() throws IOException {
-        FileUtils.deleteDirectory(_workDir);
-        _workDir.mkdirs();
+        FileUtils.deleteDirectory(getWorkDir());
+        getWorkDir().mkdirs();
     }
 
     private void copyGrubyjarMainClassIntoWorkDir() throws ClassNotFoundException, IOException
@@ -189,7 +178,7 @@ public class GrubyjarPrepTask
         grubyJarMainClass = Class.forName(GrubyjarProject.GRUBYJAR_MAIN);
         InputStream mainClass = getClassDefinition(grubyJarMainClass);
 
-        File mainClassTarget = new File(_workDir, GrubyjarProject.GRUBYJAR_MAIN + ".class");
+        File mainClassTarget = new File(getWorkDir(), GrubyjarProject.GRUBYJAR_MAIN + ".class");
         FileUtils.copyInputStreamToFile(mainClass, mainClassTarget);
     }
 
@@ -200,5 +189,13 @@ public class GrubyjarPrepTask
             throw new RuntimeException("Could not find " + path);
         }
         return ret;
+    }
+
+    private File getWorkDir() {
+        return _grubyjarProject.getWorkDir();
+    }
+
+    private ShadowJar getShadowJar() {
+        return _grubyjarProject.getShadowJar();
     }
 }

@@ -17,4 +17,17 @@ RSpec.describe '#determine_gem_files' do
         include("name" => "concurrent-ruby", "version" => "1.0.5",
             "install_path" => match('/gems/concurrent-ruby-1.0.5')))
   end
+
+  it 'gets executables from gemspecs' do
+    gemfile = test_file('gemspec1/Gemfile')
+    gemfile_lock = test_file('gemspec1/Gemfile.lock')
+
+    expect(determine_gem_files(gemfile, gemfile_lock)).to contain_exactly(
+        include("name" => "bundler",
+          "spec_class_name" => "Bundler::StubSpecification"),
+        include("name" => "concurrent-ruby", "version" => "1.0.5",
+            "install_path" => match('/gems/concurrent-ruby-1.0.5')),
+        include("name" => "gemspec1", "executable" => "bin/gemspec1",
+            "spec_class_name" => "Gem::Specification"))
+  end
 end
