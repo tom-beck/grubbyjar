@@ -27,10 +27,13 @@ public class GrubyjarPrepTaskTest {
     public TemporaryFolder _folder = new TemporaryFolder();
 
     private GrubyjarPrepTask _task;
+    private GrubyjarProject _project;
 
     @Before
     public void createTask() {
         _task = createTask(GrubyjarPrepTask.class);
+        _project = mock(GrubyjarProject.class);
+        _task.setGrubyjarProject(_project);
     }
 
     @Test

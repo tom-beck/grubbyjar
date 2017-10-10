@@ -40,7 +40,8 @@ public class GrubyjarPrepTask
     private void configureGemDeps()
     throws IOException
     {
-        _grubyjarProject.getGems().forEach(gem -> gem.configure(getShadowJar()));
+        _grubyjarProject.getGems().forEach(
+                gem -> gem.configure(getShadowJar(), getWorkDir()));
     }
 
     private void copyRubyMain()
@@ -56,6 +57,11 @@ public class GrubyjarPrepTask
     String determineScriptFile(GrubyjarExtension extension, File rootDir) {
         String script = extension.getScript();
         if (script == null) {
+            Gem sourceGem = _grubyjarProject.getSourceGem();
+            if (sourceGem != null && sourceGem.getExecutable() != null) {
+                return sourceGem.getExecutable();
+            }
+
             String[] rbFiles = rootDir.list(
                     (dir, name) -> name.endsWith(".rb"));
             if (rbFiles.length == 1) {

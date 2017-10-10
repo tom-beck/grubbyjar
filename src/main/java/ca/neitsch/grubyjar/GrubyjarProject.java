@@ -61,6 +61,17 @@ public class GrubyjarProject {
         return _gems;
     }
 
+    /* * If the project directory is a gem, return the Gem object, otherwise
+     * return null. */
+    Gem getSourceGem() {
+        for (Gem g: getGems()) {
+            if (g.getInstallPath().equals(_project.getRootDir().toString())) {
+                return g;
+            }
+        }
+        return null;
+    }
+
     private ShadowJar applyShadowPlugin() {
         _project.apply(ImmutableMap.of("plugin", "com.github.johnrengelman.shadow"));
         ShadowJar shadowJar = (ShadowJar)_project.getTasks().getByName("shadowJar");

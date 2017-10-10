@@ -4,11 +4,11 @@ import com.google.common.base.MoreObjects;
 import org.jruby.embed.EvalFailedException;
 import org.jruby.embed.ScriptingContainer;
 
-public class Gem {
+public class SystemGem {
     private String _installName;
     private String _requireName;
 
-    public Gem(String installName, String requireName) {
+    public SystemGem(String installName, String requireName) {
         _installName = installName;
         _requireName = requireName;
     }

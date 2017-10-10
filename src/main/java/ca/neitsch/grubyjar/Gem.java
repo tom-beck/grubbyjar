@@ -11,17 +11,33 @@ import org.jruby.embed.ScriptingContainer;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
+import java.util.Map;
 
 public class Gem {
     private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
+    public static final String NAME = "name";
+    public static final String VERSION = "version";
+    public static final String GEMSPEC = "gemspec";
+    public static final String FULL_NAME = "full_name";
+    public static final String INSTALL_PATH = "install_path";
+    public static final String SPEC_CLASS_NAME = "spec_class_name";
+    public static final String EXECUTABLE = "executable";
 
-    private RubyHash _hash;
+    private Map<String, Object> _hash;
 
-    private Gem(RubyHash h) {
+    Gem(Map<String, Object> h) {
         _hash = h;
+    }
+
+    public String getInstallPath() {
+        return (String)_hash.get(INSTALL_PATH);
+    }
+
+    public String getExecutable() {
+        Object executable = _hash.get("executable");
+        if (executable == null)
+            return null;
+        return (String)executable;
     }
 
     static List<Gem> loadGemDeps(Project project) {
@@ -45,12 +61,18 @@ public class Gem {
 
         List<Gem> gemList = Lists.newArrayList();
         for (Object o: gems) {
-            gemList.add(new Gem((RubyHash)o));
+            addNewGemToList(gemList, o);
         }
         return gemList;
     }
 
-    void configure(ShadowJar jar) {
+    // Separate method purely to isolate unchecked suppression
+    @SuppressWarnings("unchecked")
+    private static void addNewGemToList(List<Gem> list, Object o) {
+        list.add(new Gem((RubyHash)o));
+    }
+
+    void configure(ShadowJar jar, File workDir) {
         jar.from(_hash.get("gemspec"),
                 copyspec -> copyspec.into("specifications"));
         jar.from(_hash.get("install_path"),

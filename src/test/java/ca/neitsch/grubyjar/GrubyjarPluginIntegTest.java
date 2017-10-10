@@ -3,8 +3,6 @@ package ca.neitsch.grubyjar;
 import com.google.common.base.Joiner;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
-import org.jruby.embed.EvalFailedException;
-import org.jruby.embed.ScriptingContainer;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -64,7 +62,7 @@ public class GrubyjarPluginIntegTest {
     public void testAccessingUnbundledSystemGemShouldFail()
     throws Exception
     {
-        new Gem("concurrent-ruby", "concurrent").ensureInstalled();
+        new SystemGem("concurrent-ruby", "concurrent").ensureInstalled();
 
         TestUtil.writeTextToFile(_gradleBuildFile,
                 TestUtil.readResource("hello-world-script.gradle"));
@@ -98,6 +96,7 @@ public class GrubyjarPluginIntegTest {
         assertThat(output, endsWith("\ntrue\n"));
     }
 
+    @Ignore
     @Test
     public void testGemspecHelloWorld() throws Exception {
         for (String fileName: new String[] {
@@ -107,6 +106,7 @@ public class GrubyjarPluginIntegTest {
                 "build.gradle",
                 "gemspec1.gemspec",
                 "lib/gemspec1.rb",
+                "lib/don’t-put-in-gem"
         }) {
             File outputFile = new File(_folder.getRoot(), fileName);
             if (!outputFile.getParentFile().exists())
@@ -126,6 +126,7 @@ public class GrubyjarPluginIntegTest {
                 .withProjectDir(_folder.getRoot())
                 .withPluginClasspath()
                 .withArguments("--stacktrace", "shadowJar")
+                .withDebug(true)
                 .forwardOutput()
                 .build();
     }

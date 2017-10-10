@@ -69,13 +69,8 @@ task standaloneTest(type: Exec) {
     dependsOn standaloneTestPrep
 }
 
-task rspec(type: Exec) {
-    commandLine 'bin/rspec'
-}
-
 task testall(type: Test) {
     exclude '*'
     dependsOn unitThenIntegrationTests
-    dependsOn rspec
     dependsOn standaloneTest
 }
