@@ -98,7 +98,6 @@ public class GrubyjarPluginIntegTest {
         assertThat(output, endsWith("\ntrue\n"));
     }
 
-    @Ignore
     @Test
     public void testGemspecHelloWorld() throws Exception {
         for (String fileName: new String[] {

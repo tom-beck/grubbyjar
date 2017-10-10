@@ -6,8 +6,6 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
-import org.jruby.RubyArray;
-import org.jruby.RubyHash;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
@@ -24,8 +22,6 @@ import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_
 public class GrubyjarPrepTask
         extends DefaultTask
 {
-    private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
-
     private GrubyjarProject _grubyjarProject;
 
     public GrubyjarPrepTask() {
@@ -44,36 +40,7 @@ public class GrubyjarPrepTask
     private void configureGemDeps()
     throws IOException
     {
-        File gemfile = getProject().file("Gemfile");
-        if (!gemfile.exists())
-            return;
-
-        File gemfileLock = getProject().file("Gemfile.lock");
-        if (!gemfileLock.exists()) {
-            throw new GradleException("Gemfile exists but Gemfile.lock does not; please run `bundle install`.");
-        }
-
-        ScriptingContainer s = new ScriptingContainer();
-
-        s.runScriptlet(
-                getClass().getResourceAsStream(DETERMINE_GEM_FILES_RB),
-                DETERMINE_GEM_FILES_RB);
-
-        RubyArray gems = (RubyArray)s.callMethod(null, "determine_gem_files",
-                gemfile.toString(), gemfileLock.toString());
-
-        for (Object o: gems) {
-            RubyHash gemInfo = (RubyHash)o;
-            getShadowJar().from(gemInfo.get("gemspec"),
-                    copyspec -> copyspec.into("specifications"));
-            getShadowJar().from(gemInfo.get("install_path"),
-                    (copyspec) -> {
-                        copyspec.into("gems/" + gemInfo.get("full_name"));
-                        // Shadow’s getPath() and getName() are switched here,
-                        // so we can’t rely on either in case it gets fixed.
-                        copyspec.include((e) -> !e.getRelativePath().getLastName().equals("MANIFEST.MF"));
-                    });
-        }
+        _grubyjarProject.getGems().forEach(gem -> gem.configure(getShadowJar()));
     }
 
     private void copyRubyMain()

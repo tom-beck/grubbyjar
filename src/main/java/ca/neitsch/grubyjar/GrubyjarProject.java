@@ -8,6 +8,7 @@ import org.gradle.api.Task;
 import org.gradle.api.plugins.ApplicationPluginConvention;
 
 import java.io.File;
+import java.util.List;
 
 import static ca.neitsch.grubyjar.GradleUtil.addTask;
 
@@ -23,6 +24,7 @@ public class GrubyjarProject {
     private ShadowJar _shadowJar;
     private File _workDir;
     private GrubyjarPrepTask _grubyjarPrep;
+    private List<Gem> _gems;
 
     public GrubyjarProject(Project project) {
         _project = project;
@@ -50,6 +52,13 @@ public class GrubyjarProject {
 
     File getWorkDir() {
         return _workDir;
+    }
+
+    List<Gem> getGems() {
+        if (_gems == null) {
+            _gems = Gem.loadGemDeps(_project);
+        }
+        return _gems;
     }
 
     private ShadowJar applyShadowPlugin() {
