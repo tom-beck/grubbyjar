@@ -10,4 +10,8 @@ public interface Exceptionable<E extends Exception> {
             throw new RuntimeException(e);
         }
     }
+
+    static <E extends Exception> void rethrowing(Exceptionable<E> e) {
+        e.runRethrowing();
+    }
 }

@@ -1,6 +1,7 @@
 package ca.neitsch.grubyjar;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
@@ -14,6 +15,8 @@ import org.zeroturnaround.exec.ProcessExecutor;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -96,7 +99,6 @@ public class GrubyjarPluginIntegTest {
         assertThat(output, endsWith("\ntrue\n"));
     }
 
-    @Ignore
     @Test
     public void testGemspecHelloWorld() throws Exception {
         for (String fileName: new String[] {
@@ -125,10 +127,15 @@ public class GrubyjarPluginIntegTest {
         return GradleRunner.create()
                 .withProjectDir(_folder.getRoot())
                 .withPluginClasspath()
-                .withArguments("--stacktrace", "shadowJar")
-                .withDebug(true)
-                .forwardOutput()
-                .build();
+                .withArguments("--stacktrace", "grubyjar")
+                .withDebug(debugEnabled())
+                .forwardOutput().build();
+    }
+
+    private boolean debugEnabled() {
+        // https://stackoverflow.com/a/6865049
+        return ManagementFactory.getRuntimeMXBean()
+                .getInputArguments().toString().contains("-agentlib:jdwp");
     }
 
     private void textFile(String name, String... lines)

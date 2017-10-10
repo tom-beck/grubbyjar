@@ -2,28 +2,33 @@ package ca.neitsch.grubyjar;
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileTreeElement;
 import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.*;
 
 public class Gem {
     private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
-    public static final String NAME = "name";
-    public static final String VERSION = "version";
-    public static final String GEMSPEC = "gemspec";
-    public static final String FULL_NAME = "full_name";
-    public static final String INSTALL_PATH = "install_path";
-    public static final String SPEC_CLASS_NAME = "spec_class_name";
     public static final String EXECUTABLE = "executable";
+    public static final String FILES = "files";
+    public static final String FULL_NAME = "full_name";
+    public static final String GEMSPEC = "gemspec";
+    public static final String INSTALL_PATH = "install_path";
+    public static final String NAME = "name";
+    public static final String SPEC_TEXT = "spec_text";
+    public static final String VERSION = "version";
 
     private Map<String, Object> _hash;
+    private Set<String> _files;
+    private Set<String> _directories;
 
     Gem(Map<String, Object> h) {
         _hash = h;
@@ -38,6 +43,62 @@ public class Gem {
         if (executable == null)
             return null;
         return (String)executable;
+    }
+
+    public String getFullName() {
+        return (String)_hash.get(FULL_NAME);
+    }
+
+    public String getGemspec() {
+        return (String)_hash.get(GEMSPEC);
+    }
+
+    // If the gem has a list of files to include, we have to include only those
+    // files, but also return true on including any parent directories,
+    // otherwise pruning will prevent the target files from ever being
+    // considered.
+    boolean include(FileTreeElement e) {
+        if (e.getRelativePath().getLastName().equals("MANIFEST.MF"))
+            return false;
+        if (getFiles() == null)
+            return true;
+
+        if (getDirectories().contains(e.getRelativePath().getPathString()))
+            return true;
+        return getFiles().contains(e.getRelativePath().getPathString());
+    }
+
+    public Set<String> getFiles() {
+        if (_files != null)
+            return _files;
+        Object filesObj = _hash.get(FILES);
+        if (filesObj == null)
+            return null;
+        String[] files = fromRubyArray(filesObj);
+
+        Set<String> directories = Sets.newHashSet();
+        for (String f: files) {
+            directories.add(f.substring(0, f.lastIndexOf("/")));
+        }
+
+        _files = Sets.newHashSet(files);
+        _directories = directories;
+        return _files;
+    }
+
+    private static String[] fromRubyArray(Object stringArray) {
+        RubyArray a = (RubyArray)stringArray;
+        int l = a.getLength();
+        String ret[] = new String[l];
+        for (int i = 0; i < l; i++) {
+          ret[i] = (String)a.get(i);
+        }
+        return ret;
+    }
+
+    public Set<String> getDirectories() {
+        getFiles();
+        return _directories;
     }
 
     static List<Gem> loadGemDeps(Project project) {
@@ -72,16 +133,29 @@ public class Gem {
         list.add(new Gem((RubyHash)o));
     }
 
-    void configure(ShadowJar jar, File workDir) {
-        jar.from(_hash.get("gemspec"),
-                copyspec -> copyspec.into("specifications"));
-        jar.from(_hash.get("install_path"),
+    void configure(ShadowJar jar, File workDir)
+    {
+        String gemspec;
+        if (_hash.containsKey(SPEC_TEXT)) {
+            String specText = (String)_hash.get(SPEC_TEXT);
+            File specDir = new File(workDir, "specifications");
+            specDir.mkdir();
+            File output = new File(specDir, getFullName() + ".gemspec");
+            Exceptionable.rethrowing(() ->
+                    Files.write(output.toPath(), specText.getBytes(StandardCharsets.UTF_8)));
+        } else {
+            gemspec = getGemspec();
+
+            jar.from(gemspec,
+                    copyspec -> copyspec.into("specifications"));
+        }
+
+        jar.from(getInstallPath(),
                 (copyspec) -> {
-                    copyspec.into("gems/" + _hash.get("full_name"));
+                    copyspec.into("gems/" + getFullName());
                     // Shadow’s getPath() and getName() are switched here,
                     // so we can’t rely on either in case it gets fixed.
-                    copyspec.include((e) -> !e.getRelativePath().getLastName().equals("MANIFEST.MF"));
+                    copyspec.include(this::include);
                 });
-
     }
 }

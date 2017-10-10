@@ -23,11 +23,11 @@ RSpec.describe '#determine_gem_files' do
     gemfile_lock = test_file('gemspec1/Gemfile.lock')
 
     expect(determine_gem_files(gemfile, gemfile_lock)).to contain_exactly(
-        include(GGem::NAME => "bundler",
-            GGem::SPEC_CLASS_NAME => "Bundler::StubSpecification"),
+        include(GGem::NAME => "bundler"),
         include(GGem::NAME => "concurrent-ruby", "version" => "1.0.5",
             GGem::INSTALL_PATH => match('/gems/concurrent-ruby-1.0.5')),
-        include(GGem::NAME => "gemspec1", GGem::EXECUTABLE => "bin/gemspec1",
-            GGem::SPEC_CLASS_NAME => "Gem::Specification"))
+        hash_including(GGem::NAME => "gemspec1",
+            GGem::EXECUTABLE => "bin/gemspec1",
+            GGem::SPEC_TEXT => include("stub: gemspec1")))
   end
 end
