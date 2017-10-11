@@ -62,9 +62,14 @@ public class Gem {
         if (getFiles() == null)
             return true;
 
-        if (getDirectories().contains(e.getRelativePath().getPathString()))
+        // The current version of shadow has a bug where getPath() returns the
+        // name and getName() returns the path. We can’t rely on that behaviour
+        // in case it gets fixed. Fortunately both are also accessible through
+        // the RelativePath object.
+        String path = e.getRelativePath().getPathString();
+        if (getDirectories().contains(path))
             return true;
-        return getFiles().contains(e.getRelativePath().getPathString());
+        return getFiles().contains(path);
     }
 
     public Set<String> getFiles() {
@@ -156,8 +161,6 @@ public class Gem {
         jar.from(getInstallPath(),
                 (copyspec) -> {
                     copyspec.into("gems/" + getFullName());
-                    // Shadow’s getPath() and getName() are switched here,
-                    // so we can’t rely on either in case it gets fixed.
                     copyspec.include(this::include);
                 });
     }
