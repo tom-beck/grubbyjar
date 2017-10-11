@@ -7,7 +7,6 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTreeElement;
 import org.jruby.RubyArray;
-import org.jruby.RubyHash;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
@@ -74,7 +73,7 @@ public class Gem {
         Object filesObj = _hash.get(FILES);
         if (filesObj == null)
             return null;
-        String[] files = fromRubyArray(filesObj);
+        String[] files = fromRubyArrayMaybe(filesObj);
 
         Set<String> directories = Sets.newHashSet();
         for (String f: files) {
@@ -86,7 +85,11 @@ public class Gem {
         return _files;
     }
 
-    private static String[] fromRubyArray(Object stringArray) {
+    private static String[] fromRubyArrayMaybe(Object stringArray) {
+        if (stringArray instanceof String[]) {
+            return (String[])stringArray;
+        }
+
         RubyArray a = (RubyArray)stringArray;
         int l = a.getLength();
         String ret[] = new String[l];
@@ -130,7 +133,7 @@ public class Gem {
     // Separate method purely to isolate unchecked suppression
     @SuppressWarnings("unchecked")
     private static void addNewGemToList(List<Gem> list, Object o) {
-        list.add(new Gem((RubyHash)o));
+        list.add(new Gem((Map<String, Object>)o));
     }
 
     void configure(ShadowJar jar, File workDir)
