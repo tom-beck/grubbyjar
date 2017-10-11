@@ -1,9 +1,8 @@
 package ca.neitsch.grubyjar;
 
-import org.apache.commons.io.IOUtils;
-
+import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -12,10 +11,11 @@ public class Util {
         throw new UnsupportedOperationException("static class");
     }
 
-    static String getStringResource(Object o, String path)
-            throws IOException
-    {
-        URL url = o.getClass().getResource(path);
-        return IOUtils.toString(url, UTF_8);
+    static void writeTextToFile(String t, File f) {
+        try {
+            Files.write(f.toPath(), t.getBytes(UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

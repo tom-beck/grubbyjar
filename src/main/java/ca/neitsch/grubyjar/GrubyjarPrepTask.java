@@ -17,20 +17,22 @@ import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Set;
 
+import static ca.neitsch.grubyjar.TaskUtil.doLast2;
+import static ca.neitsch.grubyjar.TaskUtil.doLastRethrowing;
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
 
 public class GrubyjarPrepTask
-        extends DefaultTask
+    extends DefaultTask
 {
     private GrubyjarProject _grubyjarProject;
 
     public GrubyjarPrepTask() {
-        doLast2(this::verifyJrubyInClasspath);
-        doLastRethrowing(this::createCleanWorkDir);
-        doLastRethrowing(this::copyGrubyjarMainClassIntoWorkDir);
-        doLastRethrowing(this::copyRubyMain);
+        doLast2(this, this::verifyJrubyInClasspath);
+        doLastRethrowing(this, this::createCleanWorkDir);
+        doLastRethrowing(this, this::copyGrubyjarMainClassIntoWorkDir);
+        doLastRethrowing(this, this::copyRubyMain);
 
-        doLastRethrowing(this::configureGemDeps);
+        doLastRethrowing(this, this::configureGemDeps);
     }
 
     void setGrubyjarProject(GrubyjarProject grubyjarProject) {
@@ -90,18 +92,8 @@ public class GrubyjarPrepTask
                 .getByName(GrubyjarPlugin.GRUBYJAR_EXTENSION_NAME);
     }
 
-    /** Like {@code doLast}, but allows for cleaner instance methods that access
-     * the task through {@code self} instead of a parameter. */
-    void doLast2(Runnable r) {
-        doLast((t) -> r.run());
-    }
-
-    <E extends Exception> void doLastRethrowing(Exceptionable<E> r) {
-        doLast((t) -> r.runRethrowing());
-    }
-
     void verifyJrubyInClasspath() {
-        Configuration runtime = getProject().getConfigurations().getByName(RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+        Configuration runtime = GradleUtil.getRuntimeConfiguration(getProject());
 
         Set<File> files = runtime.getResolvedConfiguration().getFiles();
         verifyJrubyInClasspath(files);

@@ -22,6 +22,11 @@ when you run `java -jar build/libs/<project name>.jar`.
   - **`grubyjar`**
     Builds the Grubyjar
 
+  - **`grubyjarRequire`**
+    Copies jar dependencies locally and generates a
+    `lib/<gem_name>_jars.rb` file you can `require` to use java libraries
+    when not running from a jar
+
   - **`shadowJar`**
     Grubyjar configures the shadow plugin, so some things can be tweaked by
     adjusting the standard shadow configuration.

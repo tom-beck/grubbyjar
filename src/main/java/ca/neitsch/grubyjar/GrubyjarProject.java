@@ -40,6 +40,8 @@ public class GrubyjarProject {
         _grubyjarPrep = addTask(_project, GrubyjarPrepTask.class);
         _grubyjarPrep.setGrubyjarProject(this);
 
+        addTask(_project, GrubyjarRequireTask.class);
+
         _shadowJar.dependsOn(_grubyjarPrep);
 
         // Include the work directory contents in the jar

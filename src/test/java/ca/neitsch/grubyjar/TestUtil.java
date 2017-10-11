@@ -13,14 +13,6 @@ public class TestUtil {
         throw new UnsupportedOperationException("static class");
     }
 
-    static void writeTextToFile(File f, String t) {
-        try {
-            Files.write(f.toPath(), t.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /** Assumes text file */
     public static String readResource(String path) {
         InputStream stream = inputResource(path, 3);

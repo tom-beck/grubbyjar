@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'jardep1'
+
+Jardep1::Main.new.run

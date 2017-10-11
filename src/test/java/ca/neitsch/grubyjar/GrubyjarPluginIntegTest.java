@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -16,6 +15,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -51,10 +51,10 @@ public class GrubyjarPluginIntegTest {
     public void testHelloWorld()
     throws Exception
     {
-        TestUtil.writeTextToFile(_gradleBuildFile,
-                TestUtil.readResource("hello-world-script.gradle"));
-        TestUtil.writeTextToFile(_folder.newFile("hello.rb"),
-                "puts 'hello world'.upcase");
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"), _gradleBuildFile
+        );
+        Util.writeTextToFile("puts 'hello world'.upcase", _folder.newFile("hello.rb")
+        );
 
         runGradle();
 
@@ -67,8 +67,8 @@ public class GrubyjarPluginIntegTest {
     {
         new SystemGem("concurrent-ruby", "concurrent").ensureInstalled();
 
-        TestUtil.writeTextToFile(_gradleBuildFile,
-                TestUtil.readResource("hello-world-script.gradle"));
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"), _gradleBuildFile
+        );
 
         textFile("hello.rb", HELLO_CONCURRENT_RB);
 
@@ -81,14 +81,14 @@ public class GrubyjarPluginIntegTest {
 
     @Test
     public void testAccessBundledGemShouldSucceed() throws Exception {
-        TestUtil.writeTextToFile(_gradleBuildFile,
-                TestUtil.readResource("hello-world-script.gradle"));
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"), _gradleBuildFile
+        );
 
-        TestUtil.writeTextToFile(_folder.newFile("Gemfile"),
-                TestUtil.readResource("concurrent-ruby.Gemfile"));
+        Util.writeTextToFile(TestUtil.readResource("concurrent-ruby.Gemfile"), _folder.newFile("Gemfile")
+        );
 
-        TestUtil.writeTextToFile(_folder.newFile("Gemfile.lock"),
-                TestUtil.readResource("concurrent-ruby.Gemfile.lock"));
+        Util.writeTextToFile(TestUtil.readResource("concurrent-ruby.Gemfile.lock"), _folder.newFile("Gemfile.lock")
+        );
 
         textFile("hello.rb", HELLO_CONCURRENT_RB);
 
@@ -107,14 +107,13 @@ public class GrubyjarPluginIntegTest {
                 "bin/gemspec1",
                 "build.gradle",
                 "gemspec1.gemspec",
-                "lib/gemspec1.rb",
-                "lib/don’t-put-in-gem"
+                "lib/gemspec1.rb"
         }) {
             File outputFile = new File(_folder.getRoot(), fileName);
             if (!outputFile.getParentFile().exists())
                 outputFile.getParentFile().mkdir();
-            TestUtil.writeTextToFile(outputFile,
-                    TestUtil.readResource("gemspec1/" + fileName));
+            Util.writeTextToFile(TestUtil.readResource("gemspec1/" + fileName), outputFile
+            );
         }
 
         runGradle();
@@ -123,11 +122,49 @@ public class GrubyjarPluginIntegTest {
         assertThat(output, containsString("#<Concurrent::Event"));
     }
 
-    BuildResult runGradle() {
+    @Test
+    public void testJardepHelloWorld() throws Exception {
+        for (String fileName: new String[] {
+                ".ruby-version",
+                "Gemfile",
+                "Gemfile.lock",
+                "bin/jardep1",
+                "build.gradle",
+                "jardep1.gemspec",
+                "lib/jardep1.rb",
+                "settings.gradle",
+        }) {
+            File outputFile = new File(_folder.getRoot(), fileName);
+            if (!outputFile.getParentFile().exists())
+                outputFile.getParentFile().mkdir();
+            Util.writeTextToFile(TestUtil.readResource("jardep1/" + fileName), outputFile
+            );
+        }
+
+        runGradle("grubyjarRequire");
+
+        String output = runCommandInBuildDir("ruby", "-G", "bin/jardep1");
+        assertThat(output, containsString("#<Concurrent::Event"));
+        assertThat(output, containsString("hellohellohello"));
+    }
+
+    /**
+     * Run gradle, using "grubyjar" as the task if none is specified
+     */
+    BuildResult runGradle(String... arguments) {
+        List<String> argumentList = Lists.newArrayList();
+        argumentList.add("--stacktrace");
+
+        if (arguments.length == 0) {
+            argumentList.add("grubyjar");
+        } else {
+            argumentList.addAll(Arrays.asList(arguments));
+        }
+
         return GradleRunner.create()
                 .withProjectDir(_folder.getRoot())
                 .withPluginClasspath()
-                .withArguments("--stacktrace", "grubyjar")
+                .withArguments(argumentList.toArray(new String[0]))
                 .withDebug(debugEnabled())
                 .forwardOutput().build();
     }
@@ -141,8 +178,7 @@ public class GrubyjarPluginIntegTest {
     private void textFile(String name, String... lines)
     throws IOException
     {
-        TestUtil.writeTextToFile(_folder.newFile(name),
-                textFromLines(lines));
+        Util.writeTextToFile(textFromLines(lines), _folder.newFile(name));
     }
 
     private static String textFromLines(String... lines) {
@@ -152,9 +188,15 @@ public class GrubyjarPluginIntegTest {
     String runJar()
     throws IOException, InterruptedException, TimeoutException
     {
+        return runCommandInBuildDir("java", "-jar",
+                "build/libs/" + _folder.getRoot().getName() + ".jar");
+    }
+
+    String runCommandInBuildDir(String... command)
+    throws IOException, InterruptedException, TimeoutException
+    {
         return new ProcessExecutor()
-                .command("java", "-jar",
-                        "build/libs/" + _folder.getRoot().getName() + ".jar")
+                .command(command)
                 .directory(_folder.getRoot())
                 .readOutput(true)
                 .exitValueNormal()
