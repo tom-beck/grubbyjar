@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    runtimeOnly "commons-codec:commons-codec:1.10"
+}
+
+task dep(type: Copy) {
+    from configurations.runtimeClasspath.singleFile
+    into 'lib/ext'
+    rename {
+        filename -> "commons-io.jar"
+    }
+}
+
+defaultTasks 'dep'

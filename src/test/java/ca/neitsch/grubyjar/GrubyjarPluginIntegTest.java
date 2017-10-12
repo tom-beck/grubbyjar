@@ -1,10 +1,12 @@
 package ca.neitsch.grubyjar;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -15,8 +17,12 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,6 +32,8 @@ import static org.hamcrest.Matchers.endsWith;
 public class GrubyjarPluginIntegTest {
     @Rule
     public TemporaryFolder _folder = new TemporaryFolder();
+    @Rule
+    public TemporaryFolder _folder2 = new TemporaryFolder();
 
     @Rule
     public ExpectedException _thrown = ExpectedException.none();
@@ -51,10 +59,10 @@ public class GrubyjarPluginIntegTest {
     public void testHelloWorld()
     throws Exception
     {
-        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"), _gradleBuildFile
-        );
-        Util.writeTextToFile("puts 'hello world'.upcase", _folder.newFile("hello.rb")
-        );
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
+                _gradleBuildFile);
+        Util.writeTextToFile("puts 'hello world'.upcase",
+                _folder.newFile("hello.rb"));
 
         runGradle();
 
@@ -67,8 +75,8 @@ public class GrubyjarPluginIntegTest {
     {
         new SystemGem("concurrent-ruby", "concurrent").ensureInstalled();
 
-        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"), _gradleBuildFile
-        );
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
+                _gradleBuildFile);
 
         textFile("hello.rb", HELLO_CONCURRENT_RB);
 
@@ -101,20 +109,13 @@ public class GrubyjarPluginIntegTest {
 
     @Test
     public void testGemspecHelloWorld() throws Exception {
-        for (String fileName: new String[] {
+        copyResourcesToDirectory("gemspec1", _folder.getRoot(),
                 "Gemfile",
                 "Gemfile.lock",
                 "bin/gemspec1",
                 "build.gradle",
                 "gemspec1.gemspec",
-                "lib/gemspec1.rb"
-        }) {
-            File outputFile = new File(_folder.getRoot(), fileName);
-            if (!outputFile.getParentFile().exists())
-                outputFile.getParentFile().mkdir();
-            Util.writeTextToFile(TestUtil.readResource("gemspec1/" + fileName), outputFile
-            );
-        }
+                "lib/gemspec1.rb");
 
         runGradle();
 
@@ -124,7 +125,7 @@ public class GrubyjarPluginIntegTest {
 
     @Test
     public void testJardepHelloWorld() throws Exception {
-        for (String fileName: new String[] {
+        copyResourcesToDirectory("jardep1", _folder.getRoot(),
                 ".ruby-version",
                 "Gemfile",
                 "Gemfile.lock",
@@ -132,14 +133,7 @@ public class GrubyjarPluginIntegTest {
                 "build.gradle",
                 "jardep1.gemspec",
                 "lib/jardep1.rb",
-                "settings.gradle",
-        }) {
-            File outputFile = new File(_folder.getRoot(), fileName);
-            if (!outputFile.getParentFile().exists())
-                outputFile.getParentFile().mkdir();
-            Util.writeTextToFile(TestUtil.readResource("jardep1/" + fileName), outputFile
-            );
-        }
+                "settings.gradle");
 
         runGradle("grubyjarRequire");
 
@@ -148,10 +142,66 @@ public class GrubyjarPluginIntegTest {
         assertThat(output, containsString("hellohellohello"));
     }
 
+    @Ignore
+    @Test
+    public void testUsingGemThatIncludesJar()
+    throws Exception
+    {
+        copyResourcesToDirectory("b64wrapper", _folder2.getRoot(),
+                "b64wrapper.gemspec",
+                "build.gradle",
+                "lib/b64wrapper.rb",
+                "Gemfile",
+                "Gemfile.lock"
+        );
+
+        runGradle(_folder2, "dep");
+
+        Path b64wrapperPath = Paths.get(_folder2.getRoot().toString());
+        Path jardep2Path = Paths.get(_folder.getRoot().toString());
+        String relativePath = jardep2Path.relativize(b64wrapperPath).toString();
+
+        copyResourcesToDirectory("jardep2", _folder.getRoot(),
+                ImmutableMap.of("REPLACE_ME", relativePath),
+                ".ruby-version",
+                "Gemfile",
+                "Gemfile.lock",
+                "build.gradle",
+                "hello.rb");
+
+        runGradle();
+
+        String output = runJar();
+        assertThat(output, containsString("hello world b64wrapper2"));
+    }
+
+    void copyResourcesToDirectory(String resourcePrefix, File target, String... fileNames) {
+        copyResourcesToDirectory(resourcePrefix, target, Collections.emptyMap(), fileNames);
+    }
+
+    void copyResourcesToDirectory(String resourcePrefix, File target,
+                                  Map<String, String> replacements, String... fileNames)
+    {
+        for (String fileName: fileNames) {
+            File outputFile = new File(target, fileName);
+            if (!outputFile.getParentFile().exists())
+                outputFile.getParentFile().mkdir();
+            String contents = TestUtil.readResource(resourcePrefix + "/" + fileName);
+            for (Map.Entry<String, String> e: replacements.entrySet()) {
+                contents = contents.replace(e.getKey(), e.getValue());
+            }
+            Util.writeTextToFile(contents, outputFile);
+        }
+    }
+
+    BuildResult runGradle(String... arguments) {
+        return runGradle(_folder, arguments);
+    }
+
     /**
      * Run gradle, using "grubyjar" as the task if none is specified
      */
-    BuildResult runGradle(String... arguments) {
+    BuildResult runGradle(TemporaryFolder folder, String... arguments) {
         List<String> argumentList = Lists.newArrayList();
         argumentList.add("--stacktrace");
 
@@ -162,7 +212,7 @@ public class GrubyjarPluginIntegTest {
         }
 
         return GradleRunner.create()
-                .withProjectDir(_folder.getRoot())
+                .withProjectDir(folder.getRoot())
                 .withPluginClasspath()
                 .withArguments(argumentList.toArray(new String[0]))
                 .withDebug(debugEnabled())

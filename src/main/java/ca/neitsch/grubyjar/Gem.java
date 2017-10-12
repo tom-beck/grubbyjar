@@ -12,7 +12,10 @@ import org.jruby.embed.ScriptingContainer;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Gem {
     private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";

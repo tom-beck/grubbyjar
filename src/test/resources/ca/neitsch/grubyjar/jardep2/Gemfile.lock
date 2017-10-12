@@ -1,0 +1,17 @@
+PATH
+  remote: REPLACE_ME
+  specs:
+    b64wrapper (0.0.0)
+
+GEM
+  specs:
+
+PLATFORMS
+  java
+  ruby
+
+DEPENDENCIES
+  b64wrapper!
+
+BUNDLED WITH
+   1.15.4
