@@ -1,12 +1,15 @@
 package ca.neitsch.grubyjar;
 
 import org.apache.commons.io.IOUtils;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.Sync;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 import static ca.neitsch.grubyjar.TaskUtil.doLastRethrowing;
 import static com.google.common.collect.Lists.newArrayList;
@@ -26,11 +29,22 @@ public class GrubyjarRequireTask
         libDir.mkdir();
         File requiresFile = new File(libDir, getProject().getName() + "_jars.rb");
 
+        Configuration runtime = GradleUtil.getRuntimeConfiguration(getProject());
+
         List<String> depJars = newArrayList();
-        GradleUtil.getRuntimeConfiguration(getProject()).forEach(f -> {
+        runtime.forEach(f -> {
             depJars.add(f.getName());
         });
         depJars.sort(String::compareTo);
+
+        for (Dependency d: runtime.getAllDependencies()) {
+            if (d.getGroup().equals("org.jruby")
+                && d.getName().equals("jruby-complete"))
+            {
+                runtime.files(d).forEach(f ->
+                        depJars.remove(f.getName()));
+            }
+        }
 
         StringBuilder requires = new StringBuilder();
         for (String depJar: depJars) {
