@@ -25,5 +25,6 @@ public class GrubyjarMain {
     @SuppressWarnings("unchecked")
     private static void disabledSharedGems(ScriptingContainer s) {
         s.getEnvironment().put("GEM_PATH", "");
+        s.getEnvironment().put("RUBYLIB", "");
     }
 }

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static ca.neitsch.grubyjar.TaskUtil.doLast2;
 import static ca.neitsch.grubyjar.TaskUtil.doLastRethrowing;
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -31,7 +30,7 @@ public class GrubyjarRequireTask
         GradleUtil.getRuntimeConfiguration(getProject()).forEach(f -> {
             depJars.add(f.getName());
         });
-
+        depJars.sort(String::compareTo);
 
         StringBuilder requires = new StringBuilder();
         for (String depJar: depJars) {
@@ -41,7 +40,7 @@ public class GrubyjarRequireTask
         String template = IOUtils.toString(getClass().getResource("jars_template.rb"),
                 StandardCharsets.UTF_8);
 
-        template = template.replace("__requires_go_here__", requires.toString());
+        template = template.replace("__requires_go_here__\n", requires.toString());
 
         Util.writeTextToFile(template, requiresFile);
     }

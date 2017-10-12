@@ -3,6 +3,6 @@
 
 # If we are already running from a jar, assume these jars are on the
 # classpath and don’t need explicit requires.
-unless __FILE__.start_with?("uri:classloader")
+unless __FILE__.start_with?("uri:classloader:")
 __requires_go_here__
 end

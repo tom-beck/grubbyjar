@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -142,7 +141,6 @@ public class GrubyjarPluginIntegTest {
         assertThat(output, containsString("hellohellohello"));
     }
 
-    @Ignore
     @Test
     public void testUsingGemThatIncludesJar()
     throws Exception
@@ -172,7 +170,7 @@ public class GrubyjarPluginIntegTest {
         runGradle();
 
         String output = runJar();
-        assertThat(output, containsString("hello world b64wrapper2"));
+        assertThat(output, containsString("hello base64 gem"));
     }
 
     void copyResourcesToDirectory(String resourcePrefix, File target, String... fileNames) {

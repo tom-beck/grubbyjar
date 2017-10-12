@@ -52,8 +52,10 @@ public class GrubyjarPrepTask
         String scriptFile = determineScriptFile(getExtension(),
                 getProject().getRootDir());
 
-        FileUtils.copyFile(getProject().file(scriptFile),
+        Util.writeTextToFile("load '" + scriptFile + "'",
                 new File(getWorkDir(), GrubyjarProject.GRUBYJAR_MAIN_RB));
+
+        getShadowJar().from(scriptFile);
     }
 
     String determineScriptFile(GrubyjarExtension extension, File rootDir) {

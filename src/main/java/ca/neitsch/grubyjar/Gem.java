@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileTreeElement;
 import org.jruby.RubyArray;
 import org.jruby.embed.ScriptingContainer;
@@ -85,7 +86,8 @@ public class Gem {
 
         Set<String> directories = Sets.newHashSet();
         for (String f: files) {
-            directories.add(f.substring(0, f.lastIndexOf("/")));
+            if (f.contains("/"))
+                directories.add(f.substring(0, f.lastIndexOf("/")));
         }
 
         _files = Sets.newHashSet(files);
@@ -102,7 +104,7 @@ public class Gem {
         int l = a.getLength();
         String ret[] = new String[l];
         for (int i = 0; i < l; i++) {
-          ret[i] = (String)a.get(i);
+            ret[i] = (String)a.get(i);
         }
         return ret;
     }
@@ -161,10 +163,26 @@ public class Gem {
                     copyspec -> copyspec.into("specifications"));
         }
 
+        addStubsForEmbeddedJars(jar, workDir);
+
         jar.from(getInstallPath(),
                 (copyspec) -> {
                     copyspec.into("gems/" + getFullName());
                     copyspec.include(this::include);
                 });
+    }
+
+    private void addStubsForEmbeddedJars(ShadowJar jar, File workDir) {
+        ConfigurableFileTree tree = jar.getProject().fileTree(getInstallPath(),
+                s -> s.include(this::include));
+        tree.visit(f -> {
+            if (f.getName().endsWith(".jar")) {
+                File stubFile = new File(workDir,
+                        "gems/" + getFullName() + "/lib/ext/"
+                                + f.getName().substring(0, f.getName().length() - 4) + ".rb");
+                stubFile.getParentFile().mkdirs();
+                Util.writeTextToFile("", stubFile);
+            }
+        });
     }
 }

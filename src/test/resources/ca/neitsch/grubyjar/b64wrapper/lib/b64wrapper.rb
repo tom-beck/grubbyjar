@@ -1,4 +1,4 @@
-require_relative 'ext/commons-io.jar'
+require_relative 'ext/commons-codec'
 
 module B64Wrapper
   import org.apache.commons.codec.binary.Base64
