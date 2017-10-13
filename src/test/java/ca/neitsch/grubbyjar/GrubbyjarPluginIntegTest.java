@@ -3,9 +3,11 @@ package ca.neitsch.grubbyjar;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -66,6 +69,26 @@ public class GrubbyjarPluginIntegTest {
         runGradle();
 
         assertThat(runJar(), containsString("HELLO WORLD"));
+    }
+
+    @Ignore
+    @Test
+    public void testSystemExit()
+    throws Exception
+    {
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
+                _gradleBuildFile);
+
+        textFile("hello.rb", "p ARGV\nexit 2\n");
+
+        runGradle();
+
+        String date = ZonedDateTime.now().toString();
+        String output = new BuildDirCommand()
+                .addJarArguments(date)
+                .exitValues(2)
+                .run();
+        assertThat(output, containsString(date));
     }
 
     @Test
@@ -136,7 +159,7 @@ public class GrubbyjarPluginIntegTest {
 
         runGradle("grubbyjarRequire");
 
-        String output = runCommandInBuildDir("ruby", "-G", "bin/jardep1");
+        String output = new BuildDirCommand("ruby", "-G", "bin/jardep1").run();
         assertThat(output, containsString("#<Concurrent::Event"));
         assertThat(output, containsString("hellohellohello"));
     }
@@ -234,21 +257,45 @@ public class GrubbyjarPluginIntegTest {
     }
 
     String runJar()
-    throws IOException, InterruptedException, TimeoutException
     {
-        return runCommandInBuildDir("java", "-jar",
-                "build/libs/" + _folder.getRoot().getName() + ".jar");
+        return new BuildDirCommand().run();
     }
 
-    String runCommandInBuildDir(String... command)
-    throws IOException, InterruptedException, TimeoutException
-    {
-        return new ProcessExecutor()
-                .command(command)
-                .directory(_folder.getRoot())
-                .readOutput(true)
-                .exitValueNormal()
-                .execute()
-                .outputUTF8();
+    class BuildDirCommand {
+        ProcessExecutor _process;
+
+        BuildDirCommand(String... command) {
+            if (command.length == 0)
+                command = defaultCommand();
+
+            _process = new ProcessExecutor().command(command)
+                    .directory(_folder.getRoot());
+            _process.exitValueNormal();
+        }
+
+        BuildDirCommand exitValues(int... values) {
+            _process.exitValues(values);
+            return this;
+        }
+
+        BuildDirCommand addJarArguments(String... arguments) {
+            _process.command(ArrayUtils.addAll(defaultCommand(), arguments));
+            return this;
+        }
+
+        private String[] defaultCommand() {
+            return new String[] {
+                    "java", "-jar",
+                    "build/libs/" + _folder.getRoot().getName() + ".jar"
+            };
+        }
+
+        String run() {
+            try {
+                return _process.readOutput(true).execute().outputUTF8();
+            } catch (IOException | InterruptedException | TimeoutException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

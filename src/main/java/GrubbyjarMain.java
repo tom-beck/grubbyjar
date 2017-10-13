@@ -1,4 +1,7 @@
+import org.jruby.Ruby;
+import org.jruby.RubySystemExit;
 import org.jruby.embed.ScriptingContainer;
+import org.jruby.exceptions.RaiseException;
 
 import java.io.InputStream;
 
@@ -19,8 +22,16 @@ public class GrubbyjarMain {
         if (main == null) {
             throw new RuntimeException(GRUBYJAR_MAIN_RB + " not found in jar");
         }
-        s.runScriptlet(main, GRUBYJAR_MAIN_RB);
-        System.exit(0);
+        try {
+            s.runScriptlet(main, GRUBYJAR_MAIN_RB);
+        } catch (RaiseException e) {
+            if (e.getException() instanceof RubySystemExit) {
+                RubySystemExit ex = (RubySystemExit)e.getException();
+                System.exit(ex.status().convertToInteger().getIntValue());
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
