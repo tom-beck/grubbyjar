@@ -60,7 +60,8 @@ public class GrubbyjarPrepTaskTest {
         GrubbyjarExtension extension = new GrubbyjarExtension();
         extension.script("xyz.rb");
 
-        assertEquals("xyz.rb", _task.determineScriptFile(extension, null));
+        assertEquals("xyz.rb",
+                _task.determineScriptFile(extension, null).getPath());
     }
 
     @Test
@@ -70,7 +71,8 @@ public class GrubbyjarPrepTaskTest {
         when(rootdir.list(any())).thenReturn(
                 new String[] { "bar.rb" });
 
-        assertEquals("bar.rb", _task.determineScriptFile(extension, rootdir));
+        assertEquals("bar.rb",
+                _task.determineScriptFile(extension, rootdir).getPath());
     }
 
     @Test

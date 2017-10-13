@@ -22,7 +22,7 @@ import static ca.neitsch.grubbyjar.TaskUtil.doLastRethrowing;
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
 
 public class GrubbyjarPrepTask
-    extends DefaultTask
+        extends DefaultTask
 {
     private GrubbyjarProject _grubbyjarProject;
 
@@ -49,21 +49,26 @@ public class GrubbyjarPrepTask
     private void copyRubyMain()
     throws IOException
     {
-        String scriptFile = determineScriptFile(getExtension(),
+        Script scriptFile = determineScriptFile(getExtension(),
                 getProject().getRootDir());
 
-        Util.writeTextToFile("load '" + scriptFile + "'",
+        String requirePath = scriptFile.getPath();
+        if (scriptFile.getGem() != null) {
+            requirePath = scriptFile.getGem().getTargetDir() + "/" + requirePath;
+        }
+
+        Util.writeTextToFile("load 'uri:classloader://" + requirePath + "'",
                 new File(getWorkDir(), GrubbyjarProject.GRUBYJAR_MAIN_RB));
 
-        getShadowJar().from(scriptFile);
+        getShadowJar().from(scriptFile.getPath());
     }
 
-    String determineScriptFile(GrubbyjarExtension extension, File rootDir) {
+    Script determineScriptFile(GrubbyjarExtension extension, File rootDir) {
         String script = extension.getScript();
         if (script == null) {
             Gem sourceGem = _grubbyjarProject.getSourceGem();
             if (sourceGem != null && sourceGem.getExecutable() != null) {
-                return sourceGem.getExecutable();
+                return new Script(sourceGem.getExecutable(), sourceGem);
             }
 
             String[] rbFiles = rootDir.list(
@@ -86,7 +91,25 @@ public class GrubbyjarPrepTask
                 }
             }
         }
-        return script;
+        return new Script(script, null);
+    }
+
+    static class Script {
+        private String _path;
+        private Gem _gem;
+
+        public Script(String path, Gem gem) {
+            _path = path;
+            _gem = gem;
+        }
+
+        String getPath() {
+            return _path;
+        }
+
+        Gem getGem() {
+            return _gem;
+        }
     }
 
     private GrubbyjarExtension getExtension() {

@@ -56,6 +56,10 @@ public class Gem {
         return (String)_hash.get(GEMSPEC);
     }
 
+    public String getTargetDir() {
+        return "gems/" + getFullName();
+    }
+
     // If the gem has a list of files to include, we have to include only those
     // files, but also return true on including any parent directories,
     // otherwise pruning will prevent the target files from ever being
@@ -167,7 +171,7 @@ public class Gem {
 
         jar.from(getInstallPath(),
                 (copyspec) -> {
-                    copyspec.into("gems/" + getFullName());
+                    copyspec.into(getTargetDir());
                     copyspec.include(this::include);
                 });
     }
@@ -178,7 +182,7 @@ public class Gem {
         tree.visit(f -> {
             if (f.getName().endsWith(".jar")) {
                 File stubFile = new File(workDir,
-                        "gems/" + getFullName() + "/lib/ext/"
+                        getTargetDir() + "/lib/ext/"
                                 + f.getName().substring(0, f.getName().length() - 4) + ".rb");
                 stubFile.getParentFile().mkdirs();
                 Util.writeTextToFile("", stubFile);
