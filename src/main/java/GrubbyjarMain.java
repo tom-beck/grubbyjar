@@ -20,6 +20,7 @@ public class GrubbyjarMain {
             throw new RuntimeException(GRUBYJAR_MAIN_RB + " not found in jar");
         }
         s.runScriptlet(main, GRUBYJAR_MAIN_RB);
+        System.exit(0);
     }
 
     @SuppressWarnings("unchecked")
