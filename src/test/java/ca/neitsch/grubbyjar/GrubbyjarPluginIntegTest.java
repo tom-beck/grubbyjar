@@ -30,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.not;
 
 public class GrubbyjarPluginIntegTest {
     @Rule
@@ -79,7 +80,7 @@ public class GrubbyjarPluginIntegTest {
         Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
                 _gradleBuildFile);
 
-        textFile("hello.rb", "p ARGV\nexit 2\n");
+        textFile("hello.rb", "p ARGV", "exit 2");
 
         runGradle();
 
@@ -89,6 +90,23 @@ public class GrubbyjarPluginIntegTest {
                 .exitValues(2)
                 .run();
         assertThat(output, containsString(date));
+    }
+
+    @Test
+    public void testDoesntPreferLocalFiles()
+    {
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
+                _gradleBuildFile);
+
+        textFile("hello.rb", "puts 'foo'");
+
+        runGradle();
+
+        textFile("hello.rb", "puts 'bar'");
+
+        String output = runJar();
+        assertThat(output, containsString("foo"));
+        assertThat(output, not(containsString("bar")));
     }
 
     @Test
@@ -247,9 +265,10 @@ public class GrubbyjarPluginIntegTest {
     }
 
     private void textFile(String name, String... lines)
-    throws IOException
     {
-        Util.writeTextToFile(textFromLines(lines), _folder.newFile(name));
+        Exceptionable.rethrowing(() ->
+            Util.writeTextToFile(textFromLines(lines),
+                    new File(_folder.getRoot(), name)));
     }
 
     private static String textFromLines(String... lines) {
