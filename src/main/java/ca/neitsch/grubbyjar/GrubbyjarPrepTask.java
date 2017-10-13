@@ -57,7 +57,12 @@ public class GrubbyjarPrepTask
             requirePath = scriptFile.getGem().getTargetDir() + "/" + requirePath;
         }
 
-        Util.writeTextToFile("load 'uri:classloader://" + requirePath + "'",
+        Util.writeTextToFile("begin\n"
+                        + "load 'uri:classloader://" + requirePath + "'\n"
+                        + "nil\n"
+                        + "rescue SystemExit => e\n"
+                        + "e.status\n"
+                        + "end\n",
                 new File(getWorkDir(), GrubbyjarProject.GRUBYJAR_MAIN_RB));
 
         getShadowJar().from(scriptFile.getPath());

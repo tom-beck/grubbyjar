@@ -22,17 +22,11 @@ public class GrubbyjarMain {
         if (main == null) {
             throw new RuntimeException(GRUBYJAR_MAIN_RB + " not found in jar");
         }
-        try {
-            s.runScriptlet(main, "uri:classloader://" + GRUBYJAR_MAIN_RB);
-            System.exit(0);
-        } catch (RaiseException e) {
-            if (e.getException() instanceof RubySystemExit) {
-                RubySystemExit ex = (RubySystemExit)e.getException();
-                System.exit(ex.status().convertToInteger().getIntValue());
-            } else {
-                throw new RuntimeException(e);
-            }
-        }
+        Object returnValue = s.runScriptlet(main,
+                "uri:classloader://" + GRUBYJAR_MAIN_RB);
+        if (returnValue == null)
+            returnValue = Long.valueOf(0);
+        System.exit((int)(long)returnValue);
     }
 
     @SuppressWarnings("unchecked")
