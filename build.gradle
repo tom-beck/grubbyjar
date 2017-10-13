@@ -28,8 +28,8 @@ group = 'ca.neitsch'
 gradlePlugin {
     plugins {
         simplePlugin {
-            id = 'ca.neitsch.grubyjar'
-            implementationClass = 'ca.neitsch.grubyjar.GrubyjarPlugin'
+            id = 'ca.neitsch.grubbyjar'
+            implementationClass = 'ca.neitsch.grubbyjar.GrubbyjarPlugin'
         }
     }
 }
@@ -56,7 +56,7 @@ task unitThenIntegrationTests(type: Test) {
 
 // Run outside of TestKit to be sure we’re handling dependencies as expected
 task standaloneTestPrep(type: Exec) {
-    commandLine './gradlew', 'clean', 'grubyjar'
+    commandLine './gradlew', 'clean', 'grubbyjar'
     workingDir 'standaloneTest'
 
     dependsOn publishToMavenLocal

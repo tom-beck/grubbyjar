@@ -1,14 +1,14 @@
 require 'pathname'
 
-require_relative '../src/main/resources/ca/neitsch/grubyjar/determine_gem_files'
+require_relative '../src/main/resources/ca/neitsch/grubbyjar/determine_gem_files'
 
 def test_file(filename)
   Pathname.new(__FILE__).parent.parent / 'src' / 'test' / 'resources' /
-      'ca' / 'neitsch' / 'grubyjar' / filename
+      'ca' / 'neitsch' / 'grubbyjar' / filename
 end
 
 RSpec.describe '#determine_gem_files' do
-  let(:ggem) { Java::CaNeitschGrubyjar::Gem }
+  let(:ggem) { Java::CaNeitschGrubbyjar::Gem }
   
   it 'works' do
     gemfile = test_file('concurrent-ruby.Gemfile')

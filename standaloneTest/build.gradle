@@ -7,11 +7,11 @@ buildscript {
     }
 
     dependencies {
-        classpath 'ca.neitsch:grubyjar:+'
+        classpath 'ca.neitsch:grubbyjar:+'
     }
 }
 
-apply plugin: 'ca.neitsch.grubyjar'
+apply plugin: 'ca.neitsch.grubbyjar'
 
 repositories {
     mavenCentral()

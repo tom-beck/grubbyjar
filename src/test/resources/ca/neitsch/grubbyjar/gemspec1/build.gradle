@@ -1,0 +1,11 @@
+plugins {
+    id 'ca.neitsch.grubbyjar'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    runtimeOnly "org.jruby:jruby-complete:9.1.12.0"
+}

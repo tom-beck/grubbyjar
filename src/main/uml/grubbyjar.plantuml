@@ -1,0 +1,27 @@
+@startuml
+
+== configuration phase ==
+
+participant GrubbyjarPlugin
+create GrubbyjarProject
+GrubbyjarPlugin -> GrubbyjarProject
+create GrubbyjarPrepTask
+GrubbyjarProject -> GrubbyjarPrepTask
+GrubbyjarPrepTask -> Runner: doLast()
+create shadowJar
+GrubbyjarProject -> shadowJar: shadowJar = new ShadowJar()
+GrubbyjarProject -> GrubbyjarPrepTask: setShadowJar
+
+GrubbyjarProject -> Gem: loadGemDeps
+
+== build phase ==
+
+Runner -> GrubbyjarPrepTask: verifyJrubyInClasspath
+Runner -> GrubbyjarPrepTask: createCleanWorkDir
+Runner -> GrubbyjarPrepTask: copyRubyMain
+Runner -> GrubbyjarPrepTask: configureGemDeps
+GrubbyjarPrepTask -> shadowJar: from(), into(), ...
+
+Runner -> shadowJar: build
+
+@enduml
