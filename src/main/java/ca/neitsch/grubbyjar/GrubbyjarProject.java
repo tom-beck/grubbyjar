@@ -17,8 +17,8 @@ import static ca.neitsch.grubbyjar.GradleUtil.addTask;
  */
 public class GrubbyjarProject {
     @VisibleForTesting
-    public static final String GRUBYJAR_MAIN_RB = "grubbyjar_main.rb";
-    static final String GRUBYJAR_MAIN = "GrubbyjarMain";
+    public static final String GRUBBYJAR_MAIN_RB = "grubbyjar_main.rb";
+    static final String GRUBBYJAR_MAIN = "GrubbyjarMain";
 
     private Project _project;
     private ShadowJar _shadowJar;
@@ -78,8 +78,8 @@ public class GrubbyjarProject {
         _project.apply(ImmutableMap.of("plugin", "com.github.johnrengelman.shadow"));
         ShadowJar shadowJar = (ShadowJar)_project.getTasks().getByName("shadowJar");
 
-        Task grubyJarTask = _project.task("grubbyjar");
-        grubyJarTask.dependsOn(shadowJar);
+        Task grubbyJarTask = _project.task("grubbyjar");
+        grubbyJarTask.dependsOn(shadowJar);
         return shadowJar;
     }
 
@@ -88,7 +88,7 @@ public class GrubbyjarProject {
         _project.apply(ImmutableMap.of("plugin", "application"));
         ApplicationPluginConvention
                 pluginConvention = (ApplicationPluginConvention)_project.getConvention().getPlugins().get("application");
-        pluginConvention.setMainClassName(GRUBYJAR_MAIN);
+        pluginConvention.setMainClassName(GRUBBYJAR_MAIN);
     }
 
     private String getArchiveName() {

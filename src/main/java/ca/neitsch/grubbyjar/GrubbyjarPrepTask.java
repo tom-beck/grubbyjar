@@ -63,7 +63,7 @@ public class GrubbyjarPrepTask
                         + "rescue SystemExit => e\n"
                         + "e.status\n"
                         + "end\n",
-                new File(getWorkDir(), GrubbyjarProject.GRUBYJAR_MAIN_RB));
+                new File(getWorkDir(), GrubbyjarProject.GRUBBYJAR_MAIN_RB));
 
         getShadowJar().from(scriptFile.getPath());
     }
@@ -119,7 +119,7 @@ public class GrubbyjarPrepTask
 
     private GrubbyjarExtension getExtension() {
         return (GrubbyjarExtension)getProject().getExtensions()
-                .getByName(GrubbyjarPlugin.GRUBYJAR_EXTENSION_NAME);
+                .getByName(GrubbyjarPlugin.GRUBBYJAR_EXTENSION_NAME);
     }
 
     void verifyJrubyInClasspath() {
@@ -169,11 +169,11 @@ public class GrubbyjarPrepTask
         // It is a compile time error to import a type from the unnamed package,
         // so we use reflection.
         // https://stackoverflow.com/a/2193298
-        Class<?> grubyJarMainClass = null;
-        grubyJarMainClass = Class.forName(GrubbyjarProject.GRUBYJAR_MAIN);
-        InputStream mainClass = getClassDefinition(grubyJarMainClass);
+        Class<?> grubbyJarMainClass = null;
+        grubbyJarMainClass = Class.forName(GrubbyjarProject.GRUBBYJAR_MAIN);
+        InputStream mainClass = getClassDefinition(grubbyJarMainClass);
 
-        File mainClassTarget = new File(getWorkDir(), GrubbyjarProject.GRUBYJAR_MAIN + ".class");
+        File mainClassTarget = new File(getWorkDir(), GrubbyjarProject.GRUBBYJAR_MAIN + ".class");
         FileUtils.copyInputStreamToFile(mainClass, mainClassTarget);
     }
 

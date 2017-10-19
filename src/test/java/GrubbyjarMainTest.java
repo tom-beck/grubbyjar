@@ -10,7 +10,7 @@ public class GrubbyjarMainTest {
         // doesn’t have access to the plugin code, and the plugin code doesn’t
         // have access to the launcher because the launcher is in the default
         // package.
-        assertEquals(GrubbyjarMain.GRUBYJAR_MAIN_RB,
-                GrubbyjarProject.GRUBYJAR_MAIN_RB);
+        assertEquals(GrubbyjarMain.GRUBBYJAR_MAIN_RB,
+                GrubbyjarProject.GRUBBYJAR_MAIN_RB);
     }
 }

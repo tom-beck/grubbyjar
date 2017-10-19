@@ -6,7 +6,7 @@ import org.jruby.exceptions.RaiseException;
 import java.io.InputStream;
 
 public class GrubbyjarMain {
-    static final String GRUBYJAR_MAIN_RB = "grubbyjar_main.rb";
+    static final String GRUBBYJAR_MAIN_RB = "grubbyjar_main.rb";
 
     public static void main(String[] args)
     throws Exception
@@ -17,13 +17,13 @@ public class GrubbyjarMain {
 
         s.setArgv(args);
         InputStream main = GrubbyjarMain.class.getResourceAsStream(
-                GRUBYJAR_MAIN_RB);
+                GRUBBYJAR_MAIN_RB);
 
         if (main == null) {
-            throw new RuntimeException(GRUBYJAR_MAIN_RB + " not found in jar");
+            throw new RuntimeException(GRUBBYJAR_MAIN_RB + " not found in jar");
         }
         Object returnValue = s.runScriptlet(main,
-                "uri:classloader://" + GRUBYJAR_MAIN_RB);
+                "uri:classloader://" + GRUBBYJAR_MAIN_RB);
         if (returnValue == null)
             returnValue = Long.valueOf(0);
         System.exit((int)(long)returnValue);
