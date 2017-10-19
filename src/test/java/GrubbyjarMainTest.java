@@ -14,6 +14,6 @@ public class GrubbyjarMainTest {
         assertEquals(GrubbyjarMain.GRUBBYJAR_MAIN_RB,
                 GrubbyjarProject.GRUBBYJAR_MAIN_RB);
         assertEquals(GrubbyjarMain.GRUBBYJAR_JAR_PRELOAD_LIST,
-                Gem.GRUBBYJAR_JAR_PRELOAD_LIST);
+                GrubbyjarProject.GRUBBYJAR_JAR_PRELOAD_LIST);
     }
 }

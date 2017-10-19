@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -13,24 +14,27 @@ public class GrubbyjarMain {
     static final String GRUBBYJAR_MAIN_RB = "grubbyjar_main.rb";
     public static final String GRUBBYJAR_JAR_PRELOAD_LIST
             = ".grubbyjar_jar_preload_list";
-    private static final String URI_CLASSLOADER = "uri:classloader://";
 
     public static void main(String[] args)
     throws Exception
     {
         ScriptingContainer s = new ScriptingContainer();
+        // Configuration of the scripting container should happen before any
+        // Ruby code runs. It seems that running ruby code copies Argv from the
+        // ScriptingContainer into an ARGV RubyArray constant, and changes here
+        // afterwards do not propagate to that constant.
+        s.setArgv(args);
 
         disabledSharedGems(s);
 
         populateLoadedJarList(s);
 
-        s.setArgv(args);
         InputStream main = getResource(GRUBBYJAR_MAIN_RB);
         if (main == null) {
             throw new RuntimeException(GRUBBYJAR_MAIN_RB + " not found in jar");
         }
         Object returnValue = s.runScriptlet(main,
-                URI_CLASSLOADER + GRUBBYJAR_MAIN_RB);
+                "uri:classloader://" + GRUBBYJAR_MAIN_RB);
         if (returnValue == null)
             returnValue = Long.valueOf(0);
         System.exit((int)(long)returnValue);
@@ -53,10 +57,6 @@ public class GrubbyjarMain {
         List<String> jars = loadPreloadFile();
         if (jars == null)
             return;
-
-        for (int i = 0; i < jars.size(); i++) {
-            jars.set(i, URI_CLASSLOADER + jars.get(i));
-        }
 
         s.runScriptlet("def _grubbyjar_preload(list)\n"
                 + "  list.each do |item|\n"

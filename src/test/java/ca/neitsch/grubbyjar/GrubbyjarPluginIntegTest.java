@@ -76,7 +76,7 @@ public class GrubbyjarPluginIntegTest {
         Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
                 _gradleBuildFile);
 
-        textFile("hello.rb", "p ARGV", "exit 2");
+        textFile("hello.rb", "p ARGV.map(&:upcase)", "exit 2");
 
         runGradle();
 
@@ -85,8 +85,34 @@ public class GrubbyjarPluginIntegTest {
                 .addJarArguments(date)
                 .exitValues(2)
                 .run();
-        assertThat(output, containsString(date));
+        assertThat(output, containsString(date.toUpperCase()));
     }
+
+    @Test
+    public void testSystemExitWithGemDeps()
+    throws Exception
+    {
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
+                _gradleBuildFile);
+
+        Util.writeTextToFile(TestUtil.readResource("concurrent-ruby.Gemfile"), _folder.newFile("Gemfile")
+        );
+
+        Util.writeTextToFile(TestUtil.readResource("concurrent-ruby.Gemfile.lock"), _folder.newFile("Gemfile.lock")
+        );
+
+        textFile("hello.rb", "p ARGV.map(&:upcase)", "exit 2");
+
+        runGradle();
+
+        String date = ZonedDateTime.now().toString();
+        String output = new BuildDirCommand()
+                .addJarArguments(date)
+                .exitValues(2)
+                .run();
+        assertThat(output, containsString(date.toUpperCase()));
+    }
+
 
     @Test
     public void testDoesntPreferLocalFiles()

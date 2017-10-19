@@ -2,6 +2,7 @@ package ca.neitsch.grubbyjar;
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -15,6 +16,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static ca.neitsch.grubbyjar.TaskUtil.doLast2;
@@ -42,8 +44,16 @@ public class GrubbyjarPrepTask
     private void configureGemDeps()
     throws IOException
     {
+        List<String> jarDeps = Lists.newArrayList();
         _grubbyjarProject.getGems().forEach(
-                gem -> gem.configure(getShadowJar(), getWorkDir()));
+                gem -> {
+                    gem.configure(getShadowJar(), getWorkDir());
+                    jarDeps.addAll(gem.getJarDeps(getShadowJar()));
+                });
+        if (!jarDeps.isEmpty()) {
+            File stubFile = new File(getWorkDir(), GrubbyjarProject.GRUBBYJAR_JAR_PRELOAD_LIST);
+            Util.writeTextToFile(Joiner.on("\n").join(jarDeps) + "\n", stubFile);
+        }
     }
 
     private void copyRubyMain()

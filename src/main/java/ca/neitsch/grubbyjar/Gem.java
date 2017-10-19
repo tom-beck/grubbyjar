@@ -1,8 +1,6 @@
 package ca.neitsch.grubbyjar;
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gradle.api.GradleException;
@@ -13,19 +11,14 @@ import org.jruby.RubyArray;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static ca.neitsch.grubbyjar.Exceptionable.rethrowing;
 
 public class Gem {
-    @VisibleForTesting
-    public static final String GRUBBYJAR_JAR_PRELOAD_LIST = ".grubbyjar_jar_preload_list";
     private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
     public static final String EXECUTABLE = "executable";
     public static final String FILES = "files";
@@ -174,8 +167,6 @@ public class Gem {
                     copyspec -> copyspec.into("specifications"));
         }
 
-        addStubsForEmbeddedJars(jar, workDir);
-
         jar.from(getInstallPath(),
                 (copyspec) -> {
                     copyspec.into(getTargetDir());
@@ -183,21 +174,56 @@ public class Gem {
                 });
     }
 
-    private void addStubsForEmbeddedJars(ShadowJar jar, File workDir)
+    List<String> getJarDeps(ShadowJar jar)
     {
         ConfigurableFileTree tree = jar.getProject().fileTree(getInstallPath(),
                 s -> s.include(this::include));
-        List<String> jars = Lists.newArrayList();
 
+        List<String> jars = Lists.newArrayList();
         tree.visit(f -> {
             if (f.getName().endsWith(".jar")) {
-                jars.add(getTargetDir() + "/lib/ext/" + f.getName());
+                jars.addAll(getJarLoadPathPossibilities(f));
             }
         });
-        if (!jars.isEmpty()) {
-            File stubFile = new File(workDir, GRUBBYJAR_JAR_PRELOAD_LIST);
-            rethrowing(() ->
-                Util.writeTextToFile(Joiner.on("\n").join(jars) + "\n", stubFile));
+        return jars;
+    }
+
+    private List<String> getJarLoadPathPossibilities(FileTreeElement e) {
+        Set<String> possibilities = new HashSet<>();
+
+        for (String prefix: new String[] {
+                "uri:classloader:/" + getTargetDir() + "/",
+                "uri:classloader://" + getTargetDir() + "/",
+                ""
+        }) {
+            String path = e.getRelativePath().getParent().toString();
+            for (String middle: new String[] {
+                    path,
+                    withoutLibPrefix(path)
+            }) {
+                if (!middle.equals(path) && !prefix.equals("")) {
+                    continue;
+                }
+                String lastName = e.getRelativePath().getLastName();
+                for (String end: new String[] {
+                        lastName,
+                        withoutJarSuffix(lastName)
+                }) {
+                    String fullPath = prefix + middle + "/" + end;
+                    if (fullPath.equals("puma/puma_http11"))
+                        continue;
+                    possibilities.add(fullPath);
+                }
+            }
         }
+        return Lists.newArrayList(possibilities);
+    }
+
+    private String withoutLibPrefix(String path) {
+        return path.replaceAll("^lib/", "");
+    }
+
+    private String withoutJarSuffix(String path) {
+        return path.replaceAll("\\.jar$", "");
     }
 }

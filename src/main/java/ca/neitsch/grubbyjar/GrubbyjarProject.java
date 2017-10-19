@@ -18,6 +18,8 @@ import static ca.neitsch.grubbyjar.GradleUtil.addTask;
 public class GrubbyjarProject {
     @VisibleForTesting
     public static final String GRUBBYJAR_MAIN_RB = "grubbyjar_main.rb";
+    @VisibleForTesting
+    public static final String GRUBBYJAR_JAR_PRELOAD_LIST = ".grubbyjar_jar_preload_list";
     static final String GRUBBYJAR_MAIN = "GrubbyjarMain";
 
     private Project _project;
