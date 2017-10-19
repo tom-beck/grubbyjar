@@ -46,3 +46,8 @@ You can configure the name of the script to be run with
 By default, the gem’s default executable is used, or if not building a gem and
 there is a single `*.rb` file in the project directory, it will be used.
 Otherwise configuration will be needed.
+
+## Troubleshooting
+
+If required libraries aren’t being found, `-Djruby.debug.loadService`
+enabled debugging from the JRuby side.

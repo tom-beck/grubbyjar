@@ -1,3 +1,4 @@
+import ca.neitsch.grubbyjar.Gem;
 import ca.neitsch.grubbyjar.GrubbyjarProject;
 import org.junit.Test;
 
@@ -12,5 +13,7 @@ public class GrubbyjarMainTest {
         // package.
         assertEquals(GrubbyjarMain.GRUBBYJAR_MAIN_RB,
                 GrubbyjarProject.GRUBBYJAR_MAIN_RB);
+        assertEquals(GrubbyjarMain.GRUBBYJAR_JAR_PRELOAD_LIST,
+                Gem.GRUBBYJAR_JAR_PRELOAD_LIST);
     }
 }

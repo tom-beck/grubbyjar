@@ -1,4 +1,4 @@
-require_relative 'ext/commons-codec'
+require_relative 'ext/commons-codec.jar'
 
 module B64Wrapper
   import org.apache.commons.codec.binary.Base64

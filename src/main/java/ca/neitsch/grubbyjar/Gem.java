@@ -1,6 +1,8 @@
 package ca.neitsch.grubbyjar;
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gradle.api.GradleException;
@@ -11,6 +13,7 @@ import org.jruby.RubyArray;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
@@ -18,7 +21,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static ca.neitsch.grubbyjar.Exceptionable.rethrowing;
+
 public class Gem {
+    @VisibleForTesting
+    public static final String GRUBBYJAR_JAR_PRELOAD_LIST = ".grubbyjar_jar_preload_list";
     private static final String DETERMINE_GEM_FILES_RB = "determine_gem_files.rb";
     public static final String EXECUTABLE = "executable";
     public static final String FILES = "files";
@@ -158,7 +165,7 @@ public class Gem {
             File specDir = new File(workDir, "specifications");
             specDir.mkdir();
             File output = new File(specDir, getFullName() + ".gemspec");
-            Exceptionable.rethrowing(() ->
+            rethrowing(() ->
                     Files.write(output.toPath(), specText.getBytes(StandardCharsets.UTF_8)));
         } else {
             gemspec = getGemspec();
@@ -176,17 +183,21 @@ public class Gem {
                 });
     }
 
-    private void addStubsForEmbeddedJars(ShadowJar jar, File workDir) {
+    private void addStubsForEmbeddedJars(ShadowJar jar, File workDir)
+    {
         ConfigurableFileTree tree = jar.getProject().fileTree(getInstallPath(),
                 s -> s.include(this::include));
+        List<String> jars = Lists.newArrayList();
+
         tree.visit(f -> {
             if (f.getName().endsWith(".jar")) {
-                File stubFile = new File(workDir,
-                        getTargetDir() + "/lib/ext/"
-                                + f.getName().substring(0, f.getName().length() - 4) + ".rb");
-                stubFile.getParentFile().mkdirs();
-                Util.writeTextToFile("", stubFile);
+                jars.add(getTargetDir() + "/lib/ext/" + f.getName());
             }
         });
+        if (!jars.isEmpty()) {
+            File stubFile = new File(workDir, GRUBBYJAR_JAR_PRELOAD_LIST);
+            rethrowing(() ->
+                Util.writeTextToFile(Joiner.on("\n").join(jars) + "\n", stubFile));
+        }
     }
 }
