@@ -15,7 +15,18 @@ Given a jruby script `foo.rb` and this `build.gradle`:
     }
 
 `gradle grubbyjar` will build a self-contained jar that runs `foo.rb`
-when you run `java -jar build/libs/<project name>.jar`.
+when you run `java -jar build/libs/<project name>-grubbyjar.jar`.
+
+## Including java code
+
+Because you’re already using Gradle which is a great java build system,
+it’s super-easy to pull java code into jruby: just add java source in
+`src/main/java` and it automatically gets built into your jar.
+
+For example, the class defined in `src/main/java/org/example/Foo.java` is
+[accessible from jruby][] as `Java::OrgExample::Foo`.
+
+[accessible from jruby]: https://github.com/jruby/jruby/wiki/CallingJavaFromJRuby#referencing-java-classes-using-full-qualified-class-name
 
 ## Tasks
 
@@ -50,4 +61,4 @@ Otherwise configuration will be needed.
 ## Troubleshooting
 
 If required libraries aren’t being found, `-Djruby.debug.loadService`
-enabled debugging from the JRuby side.
+enabled debugging from the jruby side.

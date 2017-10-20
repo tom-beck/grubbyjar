@@ -6,6 +6,6 @@ Gem::Specification.new do |spec|
   spec.description   = ""
   spec.summary       = ""
   spec.license       = "BSD"
-  spec.files         = ['lib/b64wrapper.rb', 'lib/ext/commons-codec.jar']
+  spec.files         = ['lib/b64wrapper.rb', 'lib/ext/commons_codec.jar']
   spec.executables   = []
 end

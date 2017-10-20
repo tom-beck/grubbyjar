@@ -42,7 +42,12 @@ public class GrubbyjarProject {
         _grubbyjarPrep = addTask(_project, GrubbyjarPrepTask.class);
         _grubbyjarPrep.setGrubbyjarProject(this);
 
-        addTask(_project, GrubbyjarRequireTask.class);
+        GrubbyjarRequireTask requireTask
+                = addTask(_project, GrubbyjarRequireTask.class);
+        // We need to run the requires task every time, so that check-ins of
+        // what jars are in use match what’s put into the grubbyjar.
+        _grubbyjarPrep.dependsOn(requireTask);
+        _grubbyjarPrep.setRequireTask(requireTask);
 
         _shadowJar.dependsOn(_grubbyjarPrep);
 
@@ -94,6 +99,6 @@ public class GrubbyjarProject {
     }
 
     private String getArchiveName() {
-        return _project.getName() + ".jar";
+        return _project.getName() + "-grubbyjar.jar";
     }
 }

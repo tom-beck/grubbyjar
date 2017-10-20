@@ -27,6 +27,7 @@ public class GrubbyjarPrepTask
         extends DefaultTask
 {
     private GrubbyjarProject _grubbyjarProject;
+    private GrubbyjarRequireTask _requireTask;
 
     public GrubbyjarPrepTask() {
         doLast2(this, this::verifyJrubyInClasspath);
@@ -50,6 +51,12 @@ public class GrubbyjarPrepTask
                     gem.configure(getShadowJar(), getWorkDir());
                     jarDeps.addAll(gem.getJarDeps(getShadowJar()));
                 });
+
+        if (_requireTask.getJar() != null) {
+            jarDeps.add("uri:classloader://lib/ext/"
+                    + _requireTask.getJar().getArchiveName());
+        }
+
         if (!jarDeps.isEmpty()) {
             File stubFile = new File(getWorkDir(), GrubbyjarProject.GRUBBYJAR_JAR_PRELOAD_LIST);
             Util.writeTextToFile(Joiner.on("\n").join(jarDeps) + "\n", stubFile);
@@ -107,6 +114,10 @@ public class GrubbyjarPrepTask
             }
         }
         return new Script(script, null);
+    }
+
+    public void setRequireTask(GrubbyjarRequireTask requireTask) {
+        _requireTask = requireTask;
     }
 
     static class Script {

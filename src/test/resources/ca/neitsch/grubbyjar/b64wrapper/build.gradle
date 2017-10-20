@@ -14,7 +14,7 @@ task dep(type: Copy) {
     from configurations.runtimeClasspath.singleFile
     into 'lib/ext'
     rename {
-        filename -> "commons-codec.jar"
+        filename -> "commons_codec.jar"
     }
 }
 

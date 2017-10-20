@@ -13,6 +13,7 @@ public class Util {
 
     static void writeTextToFile(String t, File f) {
         try {
+            f.getParentFile().mkdirs();
             Files.write(f.toPath(), t.getBytes(UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
