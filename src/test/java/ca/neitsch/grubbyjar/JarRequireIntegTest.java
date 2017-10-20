@@ -60,26 +60,24 @@ public class JarRequireIntegTest
      */
     @Test
     public void testRequireServiceLoader() {
-        testWithJarRequireStatement("require \"ext/commons_codec\"",
+        String requireStatement = "require \"ext/commons_codec\"";
+        testWithJarRequireStatement(requireStatement,
                 () -> {
-
-                    File javaSrcFolder = new File(_folder.getRoot(),
-                            "src/main/java/ext");
-                    javaSrcFolder.mkdirs();
-
-                    copyResourcesToDirectory("", javaSrcFolder,
-                            "CommonsCodecService.java");
-
-                    runGradle("grubbyjarRequire");
-
+                    copyResourcesToDirectory("b64wrapper_loadservice", _folder2.getRoot(),
+                            "b64wrapper.gemspec",
+                            "build.gradle",
+                            "lib/b64wrapper.rb",
+                            "Gemfile",
+                            "Gemfile.lock",
+                            "src/main/java/ext/CommonsCodecService.java"
+                    );
+                    runGradle(_folder2,"dep");
                 },
-                p -> p.environment("CLASSPATH", _folder.getRoot() + "/lib/ext/"
-                        + _folder.getRoot().getName() + ".jar"),
                 "CommonsCodec");
     }
 
     private void testWithJarRequireStatement(String requireStatement) {
-        testWithJarRequireStatement(requireStatement, null, null,
+        testWithJarRequireStatement(requireStatement, null,
                 "hello base64 gem");
     }
 
@@ -90,7 +88,6 @@ public class JarRequireIntegTest
      */
     private void testWithJarRequireStatement(
             String requireStatement, Runnable postSetupAction,
-            Consumer<BuildDirCommand> jrubyRunCommandModifier,
             String expected)
     {
         copyResourcesToDirectory("b64wrapper", _folder2.getRoot(),
@@ -120,15 +117,12 @@ public class JarRequireIntegTest
         if (postSetupAction != null)
             postSetupAction.run();
 
-        BuildDirCommand runJruby = new BuildDirCommand("jruby", "-G", "hello.rb");
-        if (jrubyRunCommandModifier != null)
-            jrubyRunCommandModifier.accept(runJruby);
-        String rubyOutput = runJruby.run();
-        assertThat(rubyOutput, containsString(expected));
+        String rubyOutput = new BuildDirCommand("jruby", "-G", "hello.rb").run();
+        assertThat("jruby -G output", rubyOutput, containsString(expected));
 
         runGradle();
 
         String jarOutput = runJar();
-        assertThat(jarOutput, containsString(expected));
+        assertThat("java -jar output", jarOutput, containsString(expected));
     }
 }

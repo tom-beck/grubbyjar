@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '2.0.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jruby:jruby-complete:9.1.12.0"
+    runtimeOnly "commons-codec:commons-codec:1.10"
+}
+
+shadowJar {
+    dependencies {
+        exclude(dependency("org.jruby:jruby-complete:9.1.12.0"))
+    }
+    destinationDir = file('lib/ext')
+    baseName = 'commons_codec'
+    classifier = null
+}
+
+task('dep').dependsOn('shadowJar')

@@ -124,11 +124,6 @@ public abstract class GrubbyjarAbstractIntegTest {
             return this;
         }
 
-        BuildDirCommand environment(String key, String value) {
-            _process.environment(key, value);
-            return this;
-        }
-
         private String[] defaultCommand() {
             return new String[] {
                     "java", "-jar",

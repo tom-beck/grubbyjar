@@ -1,0 +1,18 @@
+PATH
+  remote: .
+  specs:
+    b64wrapper (0.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  java
+  ruby
+
+DEPENDENCIES
+  b64wrapper!
+
+BUNDLED WITH
+   1.15.4
