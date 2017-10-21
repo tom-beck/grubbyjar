@@ -11,6 +11,9 @@ import org.jruby.RubyArray;
 import org.jruby.embed.ScriptingContainer;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -182,13 +185,23 @@ public class Gem {
         List<String> jars = Lists.newArrayList();
         tree.visit(f -> {
             if (f.getName().endsWith(".jar")) {
-                jars.addAll(getJarLoadPathPossibilities(f));
+                LoadServiceCheck c = new LoadServiceCheck(f.getFile());
+
+                for (String path: getJarLoadPathPossibilities(f)) {
+                    if (c.containsLoadServiceFor(path)) {
+                        // Don’t add to preload list, because extra magic has to
+                        // happen at runtime.
+                        continue;
+                    }
+
+                    jars.add(path);
+                }
             }
         });
         return jars;
     }
 
-    private List<String> getJarLoadPathPossibilities(FileTreeElement e) {
+    List<String> getJarLoadPathPossibilities(FileTreeElement e) {
         Set<String> possibilities = new HashSet<>();
 
         for (String prefix: new String[] {
@@ -202,6 +215,8 @@ public class Gem {
                     withoutLibPrefix(path)
             }) {
                 if (!middle.equals(path) && !prefix.equals("")) {
+                    // Dropping something in the middle of an absolute path is
+                    // not valid
                     continue;
                 }
                 String lastName = e.getRelativePath().getLastName();
@@ -209,17 +224,20 @@ public class Gem {
                         lastName,
                         withoutJarSuffix(lastName)
                 }) {
-                    String fullPath = prefix + middle + "/" + end;
-                    if (fullPath.equals("puma/puma_http11"))
-                        continue;
+                    String fullPath = prefix + middle
+                            + (middle.isEmpty()? "" : "/") + end;
                     possibilities.add(fullPath);
                 }
             }
         }
-        return Lists.newArrayList(possibilities);
+        List<String> ret = Lists.newArrayList(possibilities);
+        ret.sort(String::compareTo);
+        return ret;
     }
 
     private String withoutLibPrefix(String path) {
+        if (path.equals("lib"))
+            return "";
         return path.replaceAll("^lib/", "");
     }
 

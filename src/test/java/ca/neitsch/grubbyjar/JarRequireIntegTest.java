@@ -2,15 +2,12 @@ package ca.neitsch.grubbyjar;
 
 import com.google.common.collect.ImmutableMap;
 import org.jruby.runtime.load.LoadService;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Consumer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -55,7 +52,7 @@ public class JarRequireIntegTest
 
     /**
      * This load mechanism, documented in {@link LoadService} is used by puma.
-     * {@code require 'puma_http11'} actually means to run {@code
+     * {@code require 'puma/puma_http11'} actually means to run {@code
      * puma/PumaHttp11Service.class}’s {@code basicLoad(Runtime)} method.
      */
     @Test
