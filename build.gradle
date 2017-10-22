@@ -1,7 +1,8 @@
 plugins {
     id 'java-gradle-plugin'
     id 'maven-publish'
-    id "net.ltgt.errorprone" version "0.0.12"
+    id 'com.gradle.plugin-publish' version '0.9.9'
+    id 'net.ltgt.errorprone' version '0.0.12'
 }
 
 repositories {
@@ -25,14 +26,29 @@ dependencies {
 }
 
 group = 'ca.neitsch'
+version = '0.0.1'
 
 gradlePlugin {
     plugins {
-        simplePlugin {
+        grubbyjarPlugin {
             id = 'ca.neitsch.grubbyjar'
             implementationClass = 'ca.neitsch.grubbyjar.GrubbyjarPlugin'
         }
     }
+}
+
+pluginBundle {
+  website = 'https://github.com/andrewdotn/grubbyjar'
+  vcsUrl = 'https://github.com/andrewdotn/grubbyjar'
+  description = 'Builds self-contained jars for jruby apps'
+  tags = ['jruby', 'fatjar', 'shadow']
+
+  plugins {
+    grubbyjarPlugin {
+      id = 'ca.neitsch.grubbyjar'
+      displayName = 'grubbyjar'
+    }
+  }
 }
 
 tasks.withType(AbstractCompile) {
@@ -64,7 +80,7 @@ task standaloneTestPrep(type: Exec) {
     shouldRunAfter integTest, test
 }
 task standaloneTest(type: Exec) {
-    commandLine 'java', '-jar', 'build/libs/standaloneTest.jar'
+    commandLine 'java', '-jar', 'build/libs/standaloneTest-grubbyjar.jar'
     workingDir 'standaloneTest'
 
     dependsOn standaloneTestPrep

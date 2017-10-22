@@ -1,3 +1,5 @@
+source 'https://rubygems.org'
+
 gem 'rspec'
 
 # The following gems are not used directly by our code, but are used by
