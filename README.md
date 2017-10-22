@@ -4,7 +4,9 @@ Grubbyjar is a gradle plugin for building self-contained jruby jars.
 
 Given a jruby script `foo.rb` and this `build.gradle`:
 
-    apply plugin: 'ca.neitsch.grubbyjar'
+    plugins {
+        id 'ca.neitsch.grubbyjar' version '0.0.1'
+    }
 
     repositories {
         mavenCentral()
@@ -61,4 +63,4 @@ Otherwise configuration will be needed.
 ## Troubleshooting
 
 If required libraries aren’t being found, `-Djruby.debug.loadService`
-enabled debugging from the jruby side.
+enables debugging from the jruby side.
