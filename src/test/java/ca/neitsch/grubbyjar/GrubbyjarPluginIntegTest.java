@@ -11,7 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class GrubbyjarPluginIntegTest
-    extends GrubbyjarAbstractIntegTest
+        extends GrubbyjarAbstractIntegTest
 {
     private static final String HELLO_CONCURRENT_RB = textFromLines(
             "require 'concurrent'",
@@ -78,6 +78,29 @@ public class GrubbyjarPluginIntegTest
                 .exitValues(2)
                 .run();
         assertThat(output, containsString(date.toUpperCase()));
+    }
+
+    @Test
+    public void testRaiseWithJavaThread()
+    throws Exception
+    {
+        Util.writeTextToFile(TestUtil.readResource("hello-world-script.gradle"),
+                _gradleBuildFile);
+
+        textFile("hello.rb",
+                "t = Java::javaLang::Thread.new do",
+                "  i = 0",
+                "  loop { puts i; i += 1; sleep 0.5 }",
+                "end",
+                "t.start",
+                "raise 'blah'");
+
+        runGradle();
+
+        // This will time out if the exception on main doesn’t exit the program.
+        new BuildDirCommand()
+                .exitValues(1)
+                .run();
     }
 
     @Test

@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public abstract class GrubbyjarAbstractIntegTest {
@@ -112,6 +113,7 @@ public abstract class GrubbyjarAbstractIntegTest {
             _process = new ProcessExecutor().command(command)
                     .directory(_folder.getRoot());
             _process.exitValueNormal();
+            _process.timeout(60, TimeUnit.SECONDS);
         }
 
         BuildDirCommand exitValues(int... values) {

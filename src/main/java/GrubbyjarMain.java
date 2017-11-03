@@ -33,11 +33,16 @@ public class GrubbyjarMain {
         if (main == null) {
             throw new RuntimeException(GRUBBYJAR_MAIN_RB + " not found in jar");
         }
-        Object returnValue = s.runScriptlet(main,
-                "uri:classloader://" + GRUBBYJAR_MAIN_RB);
-        if (returnValue == null)
-            returnValue = Long.valueOf(0);
-        System.exit((int)(long)returnValue);
+        try {
+            Object returnValue = s.runScriptlet(main,
+                    "uri:classloader://" + GRUBBYJAR_MAIN_RB);
+            if (returnValue == null)
+                returnValue = Long.valueOf(0);
+            System.exit((int)(long)returnValue);
+        } catch (Throwable t) {
+            t.printStackTrace(System.err);
+            System.exit(1);
+        }
     }
 
     static InputStream getResource(String name) {
