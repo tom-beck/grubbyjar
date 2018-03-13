@@ -2,3 +2,7 @@
 /build/
 /bin/
 /Gemfile.lock
+/.gradle/
+/.idea/
+/out/
+/standaloneTest/
